@@ -1,8 +1,4 @@
 
-library(minqa)
-library(lme4)
-library(Matrix)
-
 svy2lme<-function(formula,data, p1,p2,N2=NULL){
     
     m0<-lme4::lmer(formula,data,REML=FALSE)
@@ -11,7 +7,9 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL){
     g<-m0@flist[[1]]
     n1<-length(unique(g))
     q<-nrow(m0@pp$Zt)/n1
-    Z<-t(m0@pp$Zt)%*%matrix(diag(q), ncol = q, nrow = n1)
+    Z<-crossprod(m0@pp$Zt, (outer(1:(n1*q),1:q,function(i,j) ((i-j) %% q)==0)*1))
+
+    matrix(diag(q), ncol = q, nrow = n1*q)
 
     n<-NROW(X)
     ij<-subset(expand.grid(i=1:n,j=1:n), (g[i]==g[j]) & (i !=j))
@@ -77,9 +75,9 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL){
                 lower = c(-Inf,m0@lower),
                 upper = rep(Inf, length(theta0)))
     
-    list(fit, beta=beta)
+    list(opt=fit, beta=beta)
     
-    }
+}
         
 
  
