@@ -19,7 +19,7 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL){
     
 
     theta<-theta0<-c(2*log(m0@devcomp$cmp["sigmaML"]), m0@theta)
-    beta<-beta0<-fixef(m0)
+    beta<-beta0<-lme4::fixef(m0)
 
     if (is.null(N2)){
         pwt<- (1/p1[ii])*(1/p2[ii])*(1/p2[jj])  ## with replacement at stage 2

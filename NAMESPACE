@@ -1,5 +1,6 @@
 import(Matrix)
 import(methods)
+import(minqa)
 export(svy2lme)
 
 S3method(print,svy2lme)
