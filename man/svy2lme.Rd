@@ -1,14 +1,16 @@
 \name{svy2lme}
 \alias{svy2lme}
+\alias{coef.svy2lme}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Linear mixed models by pairwise likelihood
 }
 \description{
-Fits linear mixed models by profile pairwise composite likelihood. At the moment, it can only handle two-stage designs and two-level models, where the model clusters and sampling clusters are the same. In fact, at the moment you don't even get standard errors. In the future, settings where the model structure is nested in the design structure should be feasible. 
+Fits linear mixed models by profile pairwise composite likelihood. At the moment, it can only handle two-stage designs and two-level models, where the model clusters and sampling clusters are the same. In the future, settings where the model structure is nested in the design structure should be feasible. 
 }
 \usage{
 svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE)
+\method{coef}{svy2lme}(object,...,random=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -22,27 +24,55 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE)
     Vector of stage-one sampling probabilities
   }
   \item{p2}{
-    Vector of stage-two sampling probabilities: these are treated as if they were sampled with replacement. 
+    if not \code{NULL}, a vector of stage-two sampling probabilities:
+    these are treated as if they were sampled with replacement. 
   }
   \item{N2}{
-    Size of the stage-one sampling units (in the population). The stage-two sampling is treated as SRS without replacement.
+    if \code{p2} is \code{NULL}, the size of the stage-one sampling
+    units (in the population). The stage-two sampling is treated as
+    SRS without replacement.
   }
   \item{sterr}{
     Estimate standard errors for fixed effects? Set to \code{FALSE} for
     greater speed when using resampling to get standard errors.
     }
 
+    \item{object}{code{svy2lme} object}
+    \item{random}{if \code{TRUE}, the variance components rather than
+    the fixed effects}
 }
 \details{
-  The population pairwise likelihood would be the sum of the loglikelihoods for a pair of observations, taken over all pairs of observations from the same cluster.  This is estimated by taking a weighted sum over pairs in the sample, with the weights being the reciprocals of pairwise sampling probabilities. The advantage over standard weighted pseudolikelihoods is that there is no large-cluster assumption needed and no rescaling of weights. The disadvantage is some loss of efficiency (to an extent that isn't well understood).
+  The population pairwise likelihood would be the sum of the
+    loglikelihoods for a pair of observations, taken over all pairs of
+    observations from the same cluster.  This is estimated by taking a
+    weighted sum over pairs in the sample, with the weights being the
+    reciprocals of pairwise sampling probabilities. The advantage over
+    standard weighted pseudolikelihoods is that there is no
+    large-cluster assumption needed and no rescaling of weights. The
+    disadvantage is some loss of efficiency (to an extent that isn't
+    well understood), and simpler point estimation.
   
-  The code uses \code{lme4::lmer} to parse the formula and produce starting values, profiles out the fixed effects, and then uses \code{minqa::bobyqa} to maximise the resulting profile deviance. 
+    The code uses \code{lme4::lmer} to parse the formula and produce
+    starting values, profiles out the fixed effects, and then uses
+    \code{minqa::bobyqa} to maximise the resulting profile deviance.
+
+    The internal parametrisation of the variance components is a vector
+    whose first element is the log residual variance and whose remaining
+    components are the Cholesky decomposition of the variance matrix for
+    the random-effects parameters divided by the residual
+    variance. That is, the same parametrisation as \code{lme4::lmer}
+    with the addition of the log residual variance (which \code{lmer}
+    profiles out).
   
 }
 \value{
-  A list with values
-  \item{opt }{The output of the optimiser for the profile pairwise loglikelihood}
-  \item{beta }{The fixed effects coefficients}
+  \code{svy2lme} returns an object with \code{print}, \code{coef}, and
+  \coef{vcov} methods.
+
+  The \code{coef} method with \code{random=TRUE} returns a two-element
+  list: the first element is the estimated residual variance, the second
+  is the matrix of estimated variances and covariances of the random effects.
+  
 }
 \references{
   J.N.K. Rao, François Verret and Mike A. Hidiroglou "A weighted composite likelihood approach to inference for two-level models from survey data" Survey Methodology, December 2013  Vol. 39, No. 2, pp. 263-282

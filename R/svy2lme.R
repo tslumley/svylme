@@ -151,3 +151,18 @@ print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     print(round(coef,digits))
     cat("\n")
     }
+
+
+coef.svy2lme<-function(object,...,random=FALSE){
+    if (random) {
+        L<-object$L
+        s2=exp(object$opt$par[1])
+        dimnames(L)<-list(object$znames,object$znames)
+        list(s2=s2, varb=L*s2)
+    } else 
+        object$beta
+}
+
+vcov.svy2lme<-function(object,...){
+    object$Vbeta
+}
