@@ -2,3 +2,4 @@ import(Matrix)
 import(methods)
 export(svy2lme)
 
+S3method(print,svy2lme)

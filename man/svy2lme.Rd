@@ -27,6 +27,7 @@ Vector of stage-two sampling probabilities: these are treated as if they were sa
   \item{N2}{
 Size of the stage-one sampling units (in the population). The stage-two sampling is treated as SRS without replacement.
 }
+
 }
 \details{
 The population pairwise likelihood would be the sum of the loglikelihoods for a pair of observations, taken over all pairs of observations from the same cluster.  This is estimated by taking a weighted sum over pairs in the sample, with the weights being the reciprocals of pairwise sampling probabilities. The advantage over standard weighted pseudolikelihoods is that there is no large-cluster assumption needed and no rescaling of weights. The disadvantage is some loss of efficiency (to an extent that isn't well understood).

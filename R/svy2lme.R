@@ -12,7 +12,7 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL){
     matrix(diag(q), ncol = q, nrow = n1*q)
 
     n<-NROW(X)
-    ij<-subset(expand.grid(i=1:n,j=1:n), (g[i]==g[j]) & (i !=j))
+    ij<-subset(expand.grid(i=1:n,j=1:n), (g[i]==g[j]) &  (i !=j))
     ii<-ij[,1]
     jj<-ij[,2]
     p<-NCOL(X)
@@ -27,13 +27,15 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL){
         n2<-ave(as.numeric(g), g, FUN=length)
         pwt<-(1/p1[ii])*N2[ii]*(N2[jj]-1)/(n2[ii]*(n2[ii]-1))  ## SRS without replacement at stage 2
     }
-        
+
+    m<-nrow(ij)/n1
+    L<-matrix(0,q,q)
 
     devfun<-function(theta){
         s2<-exp(theta[1])
         Th<-matrix(0,q,q)
         Th[lower.tri(Th,diag=TRUE)]<-theta[-1]
-        L<-tcrossprod(Th)
+        L<<-tcrossprod(Th)
 
         v11<-(rowSums(Z[ii,,drop=FALSE]*( Z[ii,,drop=FALSE]%*%L))+1)*s2
         v12<-rowSums(Z[ii,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))*s2
@@ -70,14 +72,76 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL){
         
         (sum(log(det)*pwt) + qf)
         
-    }        
+    }
+
+    Vbeta<-function(theta){
+        s2<-exp(theta[1])
+        Th<-matrix(0,q,q)
+        Th[lower.tri(Th,diag=TRUE)]<-theta[-1]
+        L<<-tcrossprod(Th)
+        
+        v11<-(rowSums(Z[ii,,drop=FALSE]*( Z[ii,,drop=FALSE]%*%L))+1)*s2
+        v12<-rowSums(Z[ii,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))*s2
+        v22<-(rowSums(Z[jj,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))+1)*s2
+        det<-v11*v22-v12*v12
+        inv11<- v22/det
+        inv22<- v11/det
+        inv12<- -v12/det
+        
+        Xii<-X[ii,,drop=FALSE]
+        Xjj<-X[jj,,drop=FALSE]
+        
+        xtwx<- crossprod(Xii,pwt*inv11*Xii)+
+            crossprod(Xjj,pwt*inv22*Xjj)+
+            crossprod(Xii,pwt*inv12*Xjj)+
+            crossprod(Xjj,pwt*inv12*Xii)
+        
+        Xbeta<-X%*%beta
+        r<-y-Xbeta
+        r1<-r[ii]
+        r2<-r[jj]
+
+        ##FIXME
+        
+        
+        xwr<-Xii*pwt*(inv11*r1)+
+            Xjj*pwt*(inv22*r2)+
+            Xii*pwt*(inv12*r2)+
+            Xjj*pwt*(inv12*r1)
+
+        J<-crossprod(rowsum(xwr,g[ii]))
+        G<-solve(xtwx)
+        G%*%J%*%G
+        }
+    
     fit<-bobyqa(theta0, devfun,
                 lower = c(-Inf,m0@lower),
                 upper = rep(Inf, length(theta0)))
+
     
-    list(opt=fit, beta=beta)
+    
+    rval<-list(opt=fit, beta=beta,Vbeta=Vbeta(fit$par), formula=formula,znames=m0@cnms[[1]],L=L)
+    class(rval)<-"svy2lme"
+    rval
     
 }
         
 
  
+print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
+    cat("Linear mixed model fitted by pairwise likelihood\n")
+    cat("Formula: ")
+    cat(deparse(x$formula),"\n")
+    cat("Random effects:\n")
+    theta<-x$opt$par[-1]
+    s<-x$opt$par[1]
+    stdev<- matrix(s*sqrt(diag(x$L)),ncol=1)
+    rownames(stdev)<-x$znames
+    colnames(stdev)<-"Std.Dev."
+    print(stdev)
+    cat("\n Fixed effects")
+    coef<- cbind(beta=x$beta,SE=sqrt(diag(x$Vbeta)),t=x$beta/sqrt(diag(x$Vbeta)))
+    coef<-cbind(coef,p=2*pnorm(-abs(coef[,"t"])))
+    print(coef)
+    cat("\n")
+    }
