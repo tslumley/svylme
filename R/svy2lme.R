@@ -150,6 +150,7 @@ print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     colnames(coef)<-c("beta","SE","t","p")
     print(round(coef,digits))
     cat("\n")
+    invisible(x)
     }
 
 
