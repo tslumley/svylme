@@ -131,17 +131,19 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL){
 print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     cat("Linear mixed model fitted by pairwise likelihood\n")
     cat("Formula: ")
-    cat(deparse(x$formula),"\n")
-    cat("Random effects:\n")
+    cat(paste(deparse(x$formula),collapse="\n"))
+    cat("\nRandom effects:\n")
     theta<-x$opt$par[-1]
-    s<-x$opt$par[1]
+    s<-exp(x$opt$par[1]/2)
     stdev<- matrix(s*sqrt(diag(x$L)),ncol=1)
     rownames(stdev)<-x$znames
     colnames(stdev)<-"Std.Dev."
-    print(stdev)
-    cat("\n Fixed effects")
+    print(round(stdev,digits))
+    cat("Residual:\t",round(s,digits))
+    cat("\n Fixed effects:\n")
     coef<- cbind(beta=x$beta,SE=sqrt(diag(x$Vbeta)),t=x$beta/sqrt(diag(x$Vbeta)))
-    coef<-cbind(coef,p=2*pnorm(-abs(coef[,"t"])))
-    print(coef)
+    coef<-cbind(coef,p=2*pnorm(-abs(coef[,3])))
+    colnames(coef)<-c("beta","SE","t","p")
+    print(round(coef,digits))
     cat("\n")
     }
