@@ -22,10 +22,12 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
     beta<-beta0<-lme4::fixef(m0)
 
     if (is.null(N2)){
-        pwt<- (1/p1[ii])*(1/p2[ii])*(1/p2[jj])  ## with replacement at stage 2
+        pwt2 <- (1/p2[ii])*(1/p2[jj])
+        pwt<- (1/p1[ii])*pwt2  ## with replacement at stage 2
     } else {
         n2<-ave(as.numeric(g), g, FUN=length)
-        pwt<-(1/p1[ii])*N2[ii]*(N2[jj]-1)/(n2[ii]*(n2[ii]-1))  ## SRS without replacement at stage 2
+        pwt2<-N2[ii]*(N2[jj]-1)/(n2[ii]*(n2[ii]-1))
+        pwt<-(1/p1[ii])*pwt2  ## SRS without replacement at stage 2
     }
 
     m<-nrow(ij)/n1
@@ -100,16 +102,15 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
         r<-y-Xbeta
         r1<-r[ii]
         r2<-r[jj]
+       
+        xwr<-Xii*pwt2*(inv11*r1)+
+            Xjj*pwt2*(inv22*r2)+
+            Xii*pwt2*(inv12*r2)+
+            Xjj*pwt2*(inv12*r1)
 
-        ##FIXME
-        
-        
-        xwr<-Xii*pwt*(inv11*r1)+
-            Xjj*pwt*(inv22*r2)+
-            Xii*pwt*(inv12*r2)+
-            Xjj*pwt*(inv12*r1)
+        p1g<-p1[!duplicated(g)]
 
-        J<-crossprod(rowsum(xwr,g[ii]))
+        J<-crossprod((1/p1g)*rowsum(xwr,g[ii]))*(n1/(n1-1))
         G<-solve(xtwx)
         G%*%J%*%G
         }
