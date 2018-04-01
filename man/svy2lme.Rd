@@ -8,7 +8,7 @@ Linear mixed models by pairwise likelihood
 Fits linear mixed models by profile pairwise composite likelihood. At the moment, it can only handle two-stage designs and two-level models, where the model clusters and sampling clusters are the same. In fact, at the moment you don't even get standard errors. In the future, settings where the model structure is nested in the design structure should be feasible. 
 }
 \usage{
-svy2lme(formula, data, p1, p2, N2 = NULL)
+svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -27,6 +27,10 @@ svy2lme(formula, data, p1, p2, N2 = NULL)
   \item{N2}{
     Size of the stage-one sampling units (in the population). The stage-two sampling is treated as SRS without replacement.
   }
+  \item{sterr}{
+    Estimate standard errors for fixed effects? Set to \code{FALSE} for
+    greater speed when using resampling to get standard errors.
+    }
 
 }
 \details{

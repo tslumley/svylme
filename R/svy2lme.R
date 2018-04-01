@@ -1,5 +1,5 @@
 
-svy2lme<-function(formula,data, p1,p2,N2=NULL){
+svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
     
     m0<-lme4::lmer(formula,data,REML=FALSE)
     y<-m0@resp$y
@@ -120,7 +120,11 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL){
 
     
     
-    rval<-list(opt=fit, beta=beta,Vbeta=Vbeta(fit$par), formula=formula,znames=m0@cnms[[1]],L=L)
+    rval<-list(opt=fit,
+               beta=beta,
+               Vbeta=if (sterr) Vbeta(fit$par) else matrix(NA,q,q),
+               formula=formula,
+               znames=m0@cnms[[1]],L=L)
     class(rval)<-"svy2lme"
     rval
     
