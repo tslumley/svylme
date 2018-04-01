@@ -63,6 +63,10 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE)
     variance. That is, the same parametrisation as \code{lme4::lmer}
     with the addition of the log residual variance (which \code{lmer}
     profiles out).
+
+    Standard errors of the fixed effects are currently estimated using a
+    "with replacement" approximation, valid when the sampling fraction
+    is small and superpopulation (model, process) inference is intended.	
   
 }
 \value{
