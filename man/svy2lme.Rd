@@ -67,7 +67,7 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE)
 }
 \value{
   \code{svy2lme} returns an object with \code{print}, \code{coef}, and
-  \coef{vcov} methods.
+  \code{vcov} methods.
 
   The \code{coef} method with \code{random=TRUE} returns a two-element
   list: the first element is the estimated residual variance, the second
