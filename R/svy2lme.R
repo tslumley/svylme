@@ -108,9 +108,9 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
             Xii*pwt2*(inv12*r2)+
             Xjj*pwt2*(inv12*r1)
 
-        p1g<-p1[!duplicated(g)]
+        p1g<-p1[ii][!duplicated(g[ii])]
 
-        J<-crossprod((1/p1g)*rowsum(xwr,g[ii]))*(n1/(n1-1))
+        J<-crossprod((1/p1g)*rowsum(xwr,g[ii]))*(n1/(n1-1),reorder=FALSE)
         G<-solve(xtwx)
         G%*%J%*%G
         }
