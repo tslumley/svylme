@@ -46,8 +46,11 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
     }
 
     ## variance matrix of random effects
-    L<-matrix(0,q,q)
-
+    qi<-sapply(m0@cnms,length)
+    L<-as.matrix(Matrix::bdiag(lapply(qi,function(i) matrix(1,i,i))))
+    ###(need indicator for where thetas go in the matrix)
+    ThInd<-which((L==1) & lower.tri(L,diag=TRUE))
+    
     ## profile pairwise deviance
     devfun<-function(theta){
         ## residual variance
@@ -55,8 +58,8 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
         
         ## other parameters: Cholesky square root of variance matrix
         Th<-matrix(0,q,q)
-        Th[lower.tri(Th,diag=TRUE)]<-theta[-1]
-        L<<-tcrossprod(Th)
+        Th[ThInd]<-theta[-1]
+        L[]<<-tcrossprod(Th)
 
         ## v11 is a vector of (1,1) entries of the matrix var(Y)
         ## for each pair, similarly for the others
@@ -110,7 +113,7 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
         ## setup exactly as in devfun
         s2<-exp(theta[1])
         Th<-matrix(0,q,q)
-        Th[lower.tri(Th,diag=TRUE)]<-theta[-1]
+        Th[ThInd]<-theta[-1]
         L<<-tcrossprod(Th)
         
         v11<-(rowSums(Z[ii,,drop=FALSE]*( Z[ii,,drop=FALSE]%*%L))+1)*s2
@@ -155,13 +158,16 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
                 lower = c(-Inf,m0@lower),
                 upper = rep(Inf, length(theta0)))
 
+    ## variance of betas, if wanted
+    Vbeta<-if (sterr) Vbeta(fit$par) else matrix(NA,q,q)
     
     ## return all the things
     rval<-list(opt=fit,
                beta=beta,
-               Vbeta=if (sterr) Vbeta(fit$par) else matrix(NA,q,q),
+               Vbeta=Vbeta,
                formula=formula,
-               znames=m0@cnms[[1]],L=L)
+               znames=do.call(c,m0@cnms),
+               L=L)
     class(rval)<-"svy2lme"
     rval
     
