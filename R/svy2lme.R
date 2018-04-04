@@ -110,7 +110,7 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
 
         p1g<-p1[ii][!duplicated(g[ii])]
 
-        J<-crossprod((1/p1g)*rowsum(xwr,g[ii]))*(n1/(n1-1),reorder=FALSE)
+        J<-crossprod((1/p1g)*rowsum(xwr,g[ii],reorder=FALSE)*(n1/(n1-1)))
         G<-solve(xtwx)
         G%*%J%*%G
         }
