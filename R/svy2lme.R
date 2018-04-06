@@ -21,16 +21,17 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
     n<-NROW(X)
 
     ## all pairs within same cluster
-    ## (currently we take i!=j rather than i<j)
-    ij<-subset(expand.grid(i=1:n,j=1:n), (g[i]==g[j]) &  (i !=j))
+    ij<-subset(expand.grid(i=1:n,j=1:n), (g[i] == g[j]) & (i<j))
     ## columns of indices for first and second observation in a pair
     ii<-ij[,1]
     jj<-ij[,2]
+    npairs<-nrow(ij)
     
     p<-NCOL(X)
     
     ## starting values from the unweighted model
-    theta<-theta0<-c(2*log(m0@devcomp$cmp["sigmaML"]), m0@theta)
+    s2<-m0@devcomp$cmp["sigmaML"]^2
+    theta<-theta0<- m0@theta
     beta<-beta0<-lme4::fixef(m0)
 
     ## second-order weights
@@ -53,19 +54,16 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
     
     ## profile pairwise deviance
     devfun<-function(theta){
-        ## residual variance
-        s2<-exp(theta[1])
-        
-        ## other parameters: Cholesky square root of variance matrix
+        ## variance parameters: Cholesky square root of variance matrix
         Th<-matrix(0,q,q)
-        Th[ThInd]<-theta[-1]
+        Th[ThInd]<-theta
         L[]<<-tcrossprod(Th)
 
         ## v11 is a vector of (1,1) entries of the matrix var(Y)
         ## for each pair, similarly for the others
-        v11<-(rowSums(Z[ii,,drop=FALSE]*( Z[ii,,drop=FALSE]%*%L))+1)*s2
-        v12<-rowSums(Z[ii,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))*s2
-        v22<-(rowSums(Z[jj,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))+1)*s2
+        v11<-(rowSums(Z[ii,,drop=FALSE]*( Z[ii,,drop=FALSE]%*%L))+1)
+        v12<-rowSums(Z[ii,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))
+        v22<-(rowSums(Z[jj,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))+1)
         ## explicit 2x2 determinants
         det<-v11*v22-v12*v12
         ## explicit 2x2 inverses
@@ -103,22 +101,24 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
             crossprod(r2,pwt*inv22*r2)+
             crossprod(r1,pwt*inv12*r2)+
             crossprod(r2,pwt*inv12*r1)
+
+        s2<<-qf/sum(pwt)/2
         
-        (sum(log(det)*pwt) + qf)
+        ##sum(log(det)*pwt) + qf 
+        sum(log(det)*pwt) + 2*sum(pwt)*log(qf*2*pi/(2*sum(pwt)))
         
     }
 
     ## Standard errors of regression parameters
     Vbeta<-function(theta){
         ## setup exactly as in devfun
-        s2<-exp(theta[1])
         Th<-matrix(0,q,q)
-        Th[ThInd]<-theta[-1]
+        Th[ThInd]<-theta
         L<<-tcrossprod(Th)
         
-        v11<-(rowSums(Z[ii,,drop=FALSE]*( Z[ii,,drop=FALSE]%*%L))+1)*s2
-        v12<-rowSums(Z[ii,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))*s2
-        v22<-(rowSums(Z[jj,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))+1)*s2
+        v11<-(rowSums(Z[ii,,drop=FALSE]*( Z[ii,,drop=FALSE]%*%L))+1)
+        v12<-rowSums(Z[ii,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))
+        v22<-(rowSums(Z[jj,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))+1)
         det<-v11*v22-v12*v12
         inv11<- v22/det
         inv22<- v11/det
@@ -155,14 +155,15 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
 
     ## Powell's derivative-free quadratic optimiser
     fit<-bobyqa(theta0, devfun,
-                lower = c(-Inf,m0@lower),
-                upper = rep(Inf, length(theta0)))
+                lower = m0@lower,
+                upper = rep(Inf, length(theta)))
 
     ## variance of betas, if wanted
     Vbeta<-if (sterr) Vbeta(fit$par) else matrix(NA,q,q)
     
     ## return all the things
     rval<-list(opt=fit,
+               s2=s2,
                beta=beta,
                Vbeta=Vbeta,
                formula=formula,
@@ -180,8 +181,8 @@ print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     cat("Formula: ")
     cat(paste(deparse(x$formula),collapse="\n"))
     cat("\nRandom effects:\n")
-    theta<-x$opt$par[-1]
-    s<-exp(x$opt$par[1]/2)
+    theta<-x$opt$par
+    s<-sqrt(as.vector(x$s2))
     stdev<- matrix(s*sqrt(diag(x$L)),ncol=1)
     rownames(stdev)<-x$znames
     colnames(stdev)<-"Std.Dev."
@@ -200,7 +201,7 @@ print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
 coef.svy2lme<-function(object,...,random=FALSE){
     if (random) {
         L<-object$L
-        s2=exp(object$opt$par[1])
+        s2<-object$s2
         dimnames(L)<-list(object$znames,object$znames)
         list(s2=s2, varb=L*s2)
     } else 

@@ -53,17 +53,26 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE)
     well understood), and simpler point estimation.
   
     The code uses \code{lme4::lmer} to parse the formula and produce
-    starting values, profiles out the fixed effects, and then uses
-    \code{minqa::bobyqa} to maximise the resulting profile deviance.
+    starting values, profiles out the fixed effects and residual
+    variance, and then uses \code{minqa::bobyqa} to maximise the
+    resulting profile deviance.
 
-    The internal parametrisation of the variance components is a vector
-    whose first element is the log residual variance and whose remaining
-    components are the Cholesky decomposition of the variance matrix for
-    the random-effects parameters divided by the residual
-    variance. That is, the same parametrisation as \code{lme4::lmer}
-    with the addition of the log residual variance (which \code{lmer}
-    profiles out).
-
+    As with \code{lme4::lmer}, the default is to estimate the
+    correlations of the random effects, since there is typically  no
+    reason to assume these are zero. You can force two random effects to
+    be independent by entering them in separate terms, eg
+    \code{(1|g)+(-1+x|g)} in the model formula asks for a random slope
+    and random intercept forced to be zero.
+    
+    The internal parametrisation of the variance components uses the
+    Cholesky decomposition of the relative vairance matrix (the variance
+    matrix divided by the residual variance), as in
+    \code{lme4::lmer}. The component \code{object$s2} contains the
+    estimated residual variance and the component \code{object$opt$par}
+    contains the elements of the Cholesky factor in column-major order,
+    omitting any elements that are forced to be zero by requiring
+    indepedent random effects. 
+    
     Standard errors of the fixed effects are currently estimated using a
     "with replacement" approximation, valid when the sampling fraction
     is small and superpopulation (model, process) inference is intended.	
