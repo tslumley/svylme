@@ -37,7 +37,7 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE)
     greater speed when using resampling to get standard errors.
     }
 
-    \item{object}{code{svy2lme} object}
+    \item{object}{\code{svy2lme} object}
     \item{random}{if \code{TRUE}, the variance components rather than
     the fixed effects}
 }
