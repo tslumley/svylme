@@ -102,10 +102,11 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
             crossprod(r1,pwt*inv12*r2)+
             crossprod(r2,pwt*inv12*r1)
 
-        s2<<-qf/sum(pwt)/2
+        Nhat<-sum(pwt)*2
+        s2<<-qf/Nhat
         
         ##sum(log(det)*pwt) + qf 
-        sum(log(det)*pwt) + 2*sum(pwt)*log(qf*2*pi/(2*sum(pwt)))
+        sum(log(det)*pwt) + Nhat*log(qf*2*pi/Nhat)
         
     }
 
