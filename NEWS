@@ -1,1 +1,5 @@
+0.2   	Allow multiple random terms to get independent random effects
+
+	Profile out the residual variance as well
+
 0.1 	Added standard errors and a slightly bogus example
