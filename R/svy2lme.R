@@ -1,5 +1,5 @@
 
-svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
+svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL){
 
     ## Use unweighted model to get starting values and set up variables
     m0<-lme4::lmer(formula,data,REML=FALSE)
@@ -147,12 +147,25 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
         ## cluster weights
         p1g<-p1[ii][!duplicated(g[ii])]
 
-        ## sandwich estimator
-        J<-crossprod((1/p1g)*rowsum(xwr,g[ii],reorder=FALSE)*(n1/(n1-1)))
-        G<-solve(xtwx)
-        G%*%J%*%G
-        }
+        if (is.null(design)){
+            ## sandwich estimator
+            J<-crossprod((1/p1g)*rowsum(xwr,g[ii],reorder=FALSE)*sqrt(n1/(n1-1)))
+            G<-solve(xtwx)
+            G%*%J%*%G
+        } else {
+            inffun<-(1/p1g)*rowsum(xwr,g[ii],reorder=FALSE)%*%solve(xtwx)
+            PSUg<-design$cluster[,1][ii[!duplicated(g[ii])]]
+            
+            inffun<-rowsum(inffun, PSUg,reorder=FALSE)
+            stratPSU<-design$strata[,1][ii[!duplicated(design$cluster[,1][ii])]] ##CHECKME?
 
+            one<-rep(1,NROW(inffun))
+            ni<-ave(one,stratPSU,FUN=NROW)
+            centered<- inffun-ave(inffun, stratPSU, FUN=mean)
+            crossprod(centered*sqrt(ni/(ni-1)))
+        }
+    }
+    
 
     ## Powell's derivative-free quadratic optimiser
     fit<-bobyqa(theta0, devfun,
@@ -172,7 +185,6 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE){
                L=L)
     class(rval)<-"svy2lme"
     rval
-    
 }
         
 

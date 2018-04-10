@@ -42,5 +42,11 @@ svy2lme(isei~(1|id_school)+female+high_school+college+one_for+both_for+test_lang
 svy2lme(isei~(1+female|id_school)+female+high_school+college+one_for+both_for+test_lang,
 	data=pisa, p1=1/pisa$wnrschbw,p2=pisa$wnrschbw/pisa$w_fstuwt)
 
+
+dpisa<-survey::svydesign(id=~id_school, weight=~w_fstuwt, data=pisa)
+svy2lme(isei~(1+female|id_school)+female+high_school+college+one_for+both_for+test_lang,
+	data=pisa, p1=1/pisa$wnrschbw,p2=pisa$wnrschbw/pisa$w_fstuwt, design=dpisa)
+
+
 }
 \keyword{datasets}

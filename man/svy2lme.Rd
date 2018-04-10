@@ -6,35 +6,46 @@
 Linear mixed models by pairwise likelihood
 }
 \description{
-Fits linear mixed models by profile pairwise composite likelihood. At the moment, it can only handle two-stage designs and two-level models, where the model clusters and sampling clusters are the same. In the future, settings where the model structure is nested in the design structure should be feasible. 
+Fits linear mixed models by profile pairwise composite likelihood. At
+the moment, it can only handle two-level models, where the model
+clusters are the same as the sampling clusters at the second-last stage
+of sampling. 
 }
 \usage{
-svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE)
+svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE, design=NULL)
 \method{coef}{svy2lme}(object,...,random=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{formula}{
-    Model formula as in the \code{lme4} package
+    Model formula as in the \code{lme4} package, specifying a single
+    grouping variable (cluster) for the random effects
   }
   \item{data}{
     data frame
   }
   \item{p1}{
-    Vector of stage-one sampling probabilities
+    Vector of sampling probabilities for the clusters
   }
   \item{p2}{
-    if not \code{NULL}, a vector of stage-two sampling probabilities:
+    if not \code{NULL}, a vector of sampling probabilities for
+    observations conditional on their cluster being sampled:
     these are treated as if they were sampled with replacement. 
   }
   \item{N2}{
-    if \code{p2} is \code{NULL}, the size of the stage-one sampling
-    units (in the population). The stage-two sampling is treated as
+    if \code{p2} is \code{NULL}, the size of the clusters sampling
+    units (in the population). The subsampling is treated as
     SRS without replacement.
   }
   \item{sterr}{
     Estimate standard errors for fixed effects? Set to \code{FALSE} for
     greater speed when using resampling to get standard errors.
+  }
+  \item{design}{
+    A survey design object produced by \code{survey::svydesign}. The
+    PSUs and stage-one strata from this object will be used to estimate
+    standard errors for the fixed effects, as if the PSUs were sampled
+    with replacement within strata.
     }
 
     \item{object}{\code{svy2lme} object}
@@ -75,7 +86,14 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE)
     
     Standard errors of the fixed effects are currently estimated using a
     "with replacement" approximation, valid when the sampling fraction
-    is small and superpopulation (model, process) inference is intended.	
+    is small and superpopulation (model, process) inference is
+    intended. If no \code{design} argument is applied, the standard
+    errors are the same as those proposed by Yi et al.  If a design
+    argument is supplied, the influence functions are added up within
+    cluster, centered within strata, the residuals added up within strata, and then
+    the crossproduct is taken within each stratum. The stratum variance
+    is scaled by \code{ni/(ni-1)} where \code{ni} is the number of PSUs
+    in the stratum, and then added up across strata.
   
 }
 \value{
