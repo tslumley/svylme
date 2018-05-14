@@ -1,5 +1,36 @@
 
-svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL){
+boot.svy2lme<-function(model, basewts, replicates, scale, rscales=NULL, return.replicates=FALSE, verbose=FALSE){
+
+    nrep<-ncol(replicates)
+    pwt0<-get("pwts",environment(model$devfun))
+    if (is.null(rscales)) rscales<-rep(1,nrep)
+
+    ii<-get("ii", environment(model$devfun))
+    repwt<-(replicates/basewts)[ii,]
+
+    theta0<-model$opt$par
+    thetastar<-matrix(nrow=nrep,ncol=length(theta0))
+    betastar<-matrix(nrow=nrep,ncol=length(model$beta))
+    s2star<-numeric(nrep)
+    
+    
+    for(i in 1:nrep){
+        if (verbose) cat(i)
+        thetastar[i,]<-bobyqa(theta0, model$devfun,
+                              lower = model$lower,
+                              upper = rep(Inf, length(theta0)), pwt=repwt[,i]*pwt0)$par
+        betastar[i,]<-get("beta",environment(model$devfun))
+        s2star[i]<-get("s2",environment(model$devfun))
+    }
+    rval<-list(Vtheta=svrVar(thetastar,scale, rscales), Vbeta=svrVar(betastar,scale,rscales),Vs2=svrVar(s2star,scale,rscales))
+    if (return.replicates)
+        rval$replicates<-list(theta=thetastar, beta=betastar, s2=s2star)
+
+    rval   
+}
+
+
+svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL, return.devfun=FALSE){
 
     ## Use unweighted model to get starting values and set up variables
     m0<-lme4::lmer(formula,data,REML=FALSE)
@@ -38,12 +69,12 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL){
     if (is.null(N2)){
         ## using probabilities
         pwt2 <- (1/p2[ii])*(1/p2[jj])
-        pwt<- (1/p1[ii])*pwt2  ## with replacement at stage 2
+        pwts<- (1/p1[ii])*pwt2  ## with replacement at stage 2
     } else {
         ## using cluster size
         n2<-ave(as.numeric(g), g, FUN=length)
         pwt2<-N2[ii]*(N2[jj]-1)/(n2[ii]*(n2[ii]-1))
-        pwt<-(1/p1[ii])*pwt2  ## SRS without replacement at stage 2
+        pwts<-(1/p1[ii])*pwt2  ## SRS without replacement at stage 2
     }
 
     ## variance matrix of random effects
@@ -53,7 +84,7 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL){
     ThInd<-which((L==1) & lower.tri(L,diag=TRUE))
     
     ## profile pairwise deviance
-    devfun<-function(theta){
+    devfun<-function(theta,pwt){
         ## variance parameters: Cholesky square root of variance matrix
         Th<-matrix(0,q,q)
         Th[ThInd]<-theta
@@ -111,7 +142,7 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL){
     }
 
     ## Standard errors of regression parameters
-    Vbeta<-function(theta){
+    Vbeta<-function(theta,pwt){
         ## setup exactly as in devfun
         Th<-matrix(0,q,q)
         Th[ThInd]<-theta
@@ -170,10 +201,10 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL){
     ## Powell's derivative-free quadratic optimiser
     fit<-bobyqa(theta0, devfun,
                 lower = m0@lower,
-                upper = rep(Inf, length(theta)))
+                upper = rep(Inf, length(theta)), pwt=pwts)
 
     ## variance of betas, if wanted
-    Vbeta<-if (sterr) Vbeta(fit$par) else matrix(NA,q,q)
+    Vbeta<-if (sterr) Vbeta(fit$par,pwts) else matrix(NA,q,q)
     
     ## return all the things
     rval<-list(opt=fit,
@@ -183,6 +214,13 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL){
                formula=formula,
                znames=do.call(c,m0@cnms),
                L=L)
+    
+    ## for resampling
+    if(return.devfun) {
+        rval$devfun<-devfun
+        rval$lower<-m0@lower
+        }
+    
     class(rval)<-"svy2lme"
     rval
 }
