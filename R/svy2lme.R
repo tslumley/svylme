@@ -5,8 +5,10 @@ boot2lme<-function(model, basewts, replicates, scale, rscales=NULL, return.repli
     pwt0<-get("pwts",environment(model$devfun))
     if (is.null(rscales)) rscales<-rep(1,nrep)
 
-    ii<-get("ii", environment(model$devfun))  ## need to handle jj as well
+    ii<-get("ii", environment(model$devfun))  
     repwt<-(replicates/basewts)[ii,]
+    reptwj<-(replicates/basewts)[jj,]
+    if (any(abs((repwt-repwtj)/(repwt+repwtj))>1e-5)) warning("replicate weights vary within cluster")
 
     theta0<-model$opt$par
     thetastar<-matrix(nrow=nrep,ncol=length(theta0))

@@ -5,7 +5,7 @@
 Resampling variances for svy2lme
 }
 \description{
-Computes variance estimates for the weighted-pairwise-likelihood linear mixed models fitted by \code{\link{svy2lme}} using replicate weights.  The replicate weights for a pair are obtained by dividing by the sampling weight and then multiplying by the replicate weight. This is wrong, and it will be fixed. 
+Computes variance estimates for the weighted-pairwise-likelihood linear mixed models fitted by \code{\link{svy2lme}} using replicate weights.  The replicate weights for a pair are obtained by dividing by the sampling weight and then multiplying by the replicate weight. There will be a warning if the ratio of replicate weight to sampling weight differs for observations in the same pair. 
 }
 \usage{
 boot2lme(model, basewts, replicates, scale, rscales = NULL, return.replicates = FALSE, verbose = FALSE)
