@@ -1,11 +1,11 @@
 
-boot.svy2lme<-function(model, basewts, replicates, scale, rscales=NULL, return.replicates=FALSE, verbose=FALSE){
+boot2lme<-function(model, basewts, replicates, scale, rscales=NULL, return.replicates=FALSE, verbose=FALSE){
 
     nrep<-ncol(replicates)
     pwt0<-get("pwts",environment(model$devfun))
     if (is.null(rscales)) rscales<-rep(1,nrep)
 
-    ii<-get("ii", environment(model$devfun))
+    ii<-get("ii", environment(model$devfun))  ## need to handle jj as well
     repwt<-(replicates/basewts)[ii,]
 
     theta0<-model$opt$par
@@ -25,7 +25,7 @@ boot.svy2lme<-function(model, basewts, replicates, scale, rscales=NULL, return.r
     rval<-list(Vtheta=svrVar(thetastar,scale, rscales), Vbeta=svrVar(betastar,scale,rscales),Vs2=svrVar(s2star,scale,rscales))
     if (return.replicates)
         rval$replicates<-list(theta=thetastar, beta=betastar, s2=s2star)
-
+    class(rval)<-"boot2lme"
     rval   
 }
 

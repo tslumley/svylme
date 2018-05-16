@@ -2,7 +2,7 @@ import(Matrix)
 import(methods)
 import(minqa)
 export(svy2lme)
-export(boot.svy2lme)
+export(boot2lme)
 
 S3method(print,svy2lme)
 S3method(coef,svy2lme)

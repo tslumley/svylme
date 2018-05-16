@@ -12,7 +12,7 @@ clusters are the same as the sampling clusters at the second-last stage
 of sampling. 
 }
 \usage{
-svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE, design=NULL)
+svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE, design=NULL, return.devfun=FALSE)
 \method{coef}{svy2lme}(object,...,random=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -46,8 +46,10 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE, design=NULL)
     PSUs and stage-one strata from this object will be used to estimate
     standard errors for the fixed effects, as if the PSUs were sampled
     with replacement within strata.
-    }
-
+  }
+  \item{return.devfun}{If \code{TRUE}, return the deviance function as a
+    component of the object. This will increase the memory use
+    substantially, but allows for bootstrapping}
     \item{object}{\code{svy2lme} object}
     \item{random}{if \code{TRUE}, the variance components rather than
     the fixed effects}
