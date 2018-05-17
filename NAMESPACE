@@ -7,6 +7,11 @@ export(svy2lme)
 export(boot2lme)
 
 S3method(print,svy2lme)
+S3method(print, boot2lme)
+
 S3method(coef,svy2lme)
+
 S3method(vcov,svy2lme)
+S3method(vcov,boot2lme)
+
 

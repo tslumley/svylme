@@ -9,7 +9,10 @@ Resampling variances for svy2lme
 }
 \usage{
 boot2lme(model, basewts, replicates, scale, rscales = NULL,
-         return.replicates = FALSE, verbose = FALSE)
+   verbose = FALSE)
+\method{vcov}{boot2lme}<-function(object,
+   parameter=c("beta", "theta","s2", "relSD" ,"SD","relVar","fullVar"),
+   ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,24 +31,29 @@ see Details below
   \item{rscales}{
 see Details below
 }
-  \item{return.replicates}{
-If \code{TRUE}, return the replicate estimates as well as the estimated variance
-}
   \item{verbose}{
 print progess information
 }
+\item{object}{returned by \code{boot2lme}}
+\item{parameter}{Variance matrix for: regression parameters, relative variance
+  parameters on Cholesky square root scale, residual variance, relative
+  standard errors of random effects, standard errors of random effects,
+  entire relative variance matrix, entire variance matrix}
 }
 \details{
 The variance is estimated from the replicates \code{thetastar} and original point estimate \code{theta} as \code{scale*sum(rscales* (thetastar-theta)^2)}. See the example for how to extract all the necessary information from a replicate-weights survey design object.
 
 }
 \value{
-A list with elements
-\item{Vbeta}{Variance matrix for the fixed-effect parameters}
-\item{Vtheta}{Variance matrix for the variance component parameters (elements of the Cholesky square root of the random-effects relative variance matrix)}
-\item{Vs2}{Variance matrix for the residual variance }
-\item{replicates}{list of replicate estimates of the parameters}
+ For \code{boot2lme}, an object of class \code{boot2lme} with components
+  \item{theta}{replicates of variance parameters (on Cholesky square
+    root scale)}
+  \item{beta}{replicates of regression parameters}
+  \item{D}{replicates of relative variance matrix}
+  \item{scale,rscales}{from the input}
+  \item{formula}{model formula from the input}
 
+  For the \code{vcov} method, a variance matrix.
 }
 
 
@@ -66,6 +74,10 @@ bpisa<-as.svrepdesign(dpisa, type="bootstrap", replicates=100)
 b<-boot2lme(m, weights(bpisa,"sampling"), weights(bpisa,"analysis"),
 	       bpisa$scale, bpisa$rscales,verbose=TRUE)
 str(b)
+
+vcov(b,"beta")
+vcov(b,"SD")
+
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

@@ -1,5 +1,5 @@
 
-boot2lme<-function(model, basewts, replicates, scale, rscales=NULL, return.replicates=FALSE, verbose=FALSE){
+boot2lme<-function(model, basewts, replicates, scale, rscales=NULL,  verbose=FALSE){
 
     nrep<-ncol(replicates)
     pwt0<-get("pwts",environment(model$devfun))
@@ -15,8 +15,12 @@ boot2lme<-function(model, basewts, replicates, scale, rscales=NULL, return.repli
     thetastar<-matrix(nrow=nrep,ncol=length(theta0))
     betastar<-matrix(nrow=nrep,ncol=length(model$beta))
     s2star<-numeric(nrep)
+
+    D<-get("L",environment(model$devfun))
+    Dstar<-array(0,c(nrep,NROW(D),NCOL(D)))
     
     if (verbose) pb<-txtProgressBar(min = 0, max = nrep, style = 3)
+
     for(i in 1:nrep){
         if (verbose) setTxtProgressBar(pb, i)
         thetastar[i,]<-bobyqa(theta0, model$devfun,
@@ -24,16 +28,36 @@ boot2lme<-function(model, basewts, replicates, scale, rscales=NULL, return.repli
                               upper = rep(Inf, length(theta0)), pwt=repwt[,i]*pwt0)$par
         betastar[i,]<-get("beta",environment(model$devfun))
         s2star[i]<-get("s2",environment(model$devfun))
+        Dstar[i,,]<-get("L",environment(model$devfun))
     }
-    rval<-list(Vtheta=svrVar(thetastar,scale, rscales), Vbeta=svrVar(betastar,scale,rscales),Vs2=svrVar(s2star,scale,rscales))
 
     if(verbose) close(pb)
     
-    if (return.replicates)
-        rval$replicates<-list(theta=thetastar, beta=betastar, s2=s2star)
+    rval<-list(theta=thetastar, beta=betastar, s2=s2star, D=Dstar,scale=scale, rscales=rscales, formula=model$formula)
+
     class(rval)<-"boot2lme"
     rval   
 }
+
+print.boot2lme<-function(x,...){
+    cat("boot2lme:",length(x$s2star),"replicates from", deparse(x$formula))
+    invisible(x)
+}
+
+vcov.boot2lme<-function(object, parameter=c("beta","theta","s2","relSD","SD","relVar","fullVar"),...){
+    parameter<-match.arg(parameter)
+
+    switch(parameter,
+           beta=svrVar(object$betas, object$scale,object$rscales),
+           theta=svrVar(object$theta, object$scale,object$rscales),
+           s2=svrVar(object$s2, object$scale, object$rscales),
+           relSD=svrVar(sqrt(t(apply(object$D,1, diag))), object$scale, object$rscales),
+           SD=svrVar(sqrt(t(apply(object$D,1, diag))*object$s2), object$scale, object$rscales),
+           relVar=svrVar(t(apply(object$D,1,c)), object$scale, object$rscales),
+           fullVar=svrVar(t(apply(object$D,1,c))*object$s2, object$scale, object$rscales)
+           )
+
+    }
 
 
 svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL, return.devfun=FALSE){
