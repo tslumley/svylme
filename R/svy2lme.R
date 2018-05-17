@@ -5,19 +5,20 @@ boot2lme<-function(model, basewts, replicates, scale, rscales=NULL, return.repli
     pwt0<-get("pwts",environment(model$devfun))
     if (is.null(rscales)) rscales<-rep(1,nrep)
 
-    ii<-get("ii", environment(model$devfun))  
+    ii<-get("ii", environment(model$devfun))
+    jj<-get("jj", environment(model$devfun))  
     repwt<-(replicates/basewts)[ii,]
-    reptwj<-(replicates/basewts)[jj,]
-    if (any(abs((repwt-repwtj)/(repwt+repwtj))>1e-5)) warning("replicate weights vary within cluster")
+    repwtj<-(replicates/basewts)[jj,]
+    if (any(abs((repwt-repwtj)/(1+repwt+repwtj))>1e-5)) warning("replicate weights vary within cluster")
 
     theta0<-model$opt$par
     thetastar<-matrix(nrow=nrep,ncol=length(theta0))
     betastar<-matrix(nrow=nrep,ncol=length(model$beta))
     s2star<-numeric(nrep)
     
-    
+    if (verbose) pb<-txtProgressBar(min = 0, max = nrep, style = 3)
     for(i in 1:nrep){
-        if (verbose) cat(i)
+        if (verbose) setTxtProgressBar(pb, i)
         thetastar[i,]<-bobyqa(theta0, model$devfun,
                               lower = model$lower,
                               upper = rep(Inf, length(theta0)), pwt=repwt[,i]*pwt0)$par
@@ -25,6 +26,9 @@ boot2lme<-function(model, basewts, replicates, scale, rscales=NULL, return.repli
         s2star[i]<-get("s2",environment(model$devfun))
     }
     rval<-list(Vtheta=svrVar(thetastar,scale, rscales), Vbeta=svrVar(betastar,scale,rscales),Vs2=svrVar(s2star,scale,rscales))
+
+    if(verbose) close(pb)
+    
     if (return.replicates)
         rval$replicates<-list(theta=thetastar, beta=betastar, s2=s2star)
     class(rval)<-"boot2lme"

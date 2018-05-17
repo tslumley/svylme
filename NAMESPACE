@@ -1,6 +1,8 @@
 import(Matrix)
 import(methods)
 import(minqa)
+importFrom(utils,setTxtProgressBar)
+importFrom(utils,txtProgressBar)
 export(svy2lme)
 export(boot2lme)
 

@@ -5,10 +5,11 @@
 Resampling variances for svy2lme
 }
 \description{
-Computes variance estimates for the weighted-pairwise-likelihood linear mixed models fitted by \code{\link{svy2lme}} using replicate weights.  The replicate weights for a pair are obtained by dividing by the sampling weight and then multiplying by the replicate weight. There will be a warning if the ratio of replicate weight to sampling weight differs for observations in the same pair. 
+  Computes variance estimates for the weighted-pairwise-likelihood linear mixed models fitted by \code{\link{svy2lme}} using replicate weights.  The replicate weights for a pair are obtained by dividing by the sampling weight and then multiplying by the replicate weight. There will be a warning if the ratio of replicate weight to sampling weight differs for observations in the same pair. 
 }
 \usage{
-boot2lme(model, basewts, replicates, scale, rscales = NULL, return.replicates = FALSE, verbose = FALSE)
+boot2lme(model, basewts, replicates, scale, rscales = NULL,
+         return.replicates = FALSE, verbose = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -50,18 +51,22 @@ A list with elements
 
 
 \examples{
+\donttest{
+##takes a few minutes
 data(pisa)
 
 dpisa<-survey::svydesign(id=~id_school, weight=~w_fstuwt, data=pisa)
 
 m<-svy2lme(isei~(1+female|id_school)+female+high_school+college+one_for+both_for+test_lang,
-	data=pisa, p1=1/pisa$wnrschbw,p2=pisa$wnrschbw/pisa$w_fstuwt, design=dpisa)
+	data=pisa, p1=1/pisa$wnrschbw,p2=pisa$wnrschbw/pisa$w_fstuwt, design=dpisa,
+	return.devfun=TRUE)
 
 bpisa<-as.svrepdesign(dpisa, type="bootstrap", replicates=100)
 
-b<-boot2lme(m, weights(bpisa,"sampling"), weights(bpisa,"analysis"))
+b<-boot2lme(m, weights(bpisa,"sampling"), weights(bpisa,"analysis"),
+	       bpisa$scale, bpisa$rscales,verbose=TRUE)
 str(b)
-
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
