@@ -48,7 +48,7 @@ vcov.boot2lme<-function(object, parameter=c("beta","theta","s2","relSD","SD","re
     parameter<-match.arg(parameter)
 
     switch(parameter,
-           beta=svrVar(object$betas, object$scale,object$rscales),
+           beta=svrVar(object$beta, object$scale,object$rscales),
            theta=svrVar(object$theta, object$scale,object$rscales),
            s2=svrVar(object$s2, object$scale, object$rscales),
            relSD=svrVar(sqrt(t(apply(object$D,1, diag))), object$scale, object$rscales),
