@@ -1,4 +1,5 @@
 
+
 boot2lme<-function(model, basewts, replicates, scale, rscales=NULL,  verbose=FALSE){
 
     nrep<-ncol(replicates)
