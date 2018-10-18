@@ -103,6 +103,26 @@ svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE)
 }
 \examples{
 
+data(api, package="survey")
+
+# one-stage cluster sample
+dclus1<-svydesign(id=~dnum, weights=~pw, data=apiclus1, fpc=~fpc)
+# two-stage cluster sample
+dclus2<-svydesign(id=~dnum+snum, fpc=~fpc1+fpc2, data=apiclus2)
+# two-stage `with replacement'
+dclus2wr<-svydesign(id=~dnum+snum, weights=~pw, data=apiclus2)
+
+
+svy2lme(api00~(1|dnum)+ell+mobility+api99, design=dclus1)
+svy2lme(api00~(1|dnum)+ell+mobility+api99, design=dclus2)
+
+## Fails: doesn't have multistage weights
+try(svy2lme(api00~(1|dnum)+ell+mobility+api99, design=dclus2wr), outFile=stdout())
+
+lme4::lmer(api00~(1|dnum)+ell+mobility+api99, data=apipop)
+
+## Simulated
+
 df<-data.frame(x=rnorm(1000*20),g=rep(1:1000,each=20), t=rep(1:20,1000), id=1:20000)
 df$u<-with(df, rnorm(1000)[g])
 

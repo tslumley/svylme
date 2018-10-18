@@ -60,18 +60,23 @@ vcov.boot2lme<-function(object, parameter=c("beta","theta","s2","relSD","SD","re
 
     }
 
-
+is_close<-function(a,b, tolerance=1e-5){
+    all(abs((as.matrix(a)-as.matrix(b))/(as.matrix(a)+as.matrix(b)))<tolerance)
+    }
 
 pi_from_design<-function(design, ii,jj){
     if (NCOL(design$allprob)==1){
         ## No multistage weights
-        if (!any(duplicated(design$cluster))){
+        if (NCOL(design$cluster)>1)
+            stop("you need weights/probabilities for each stage of sampling")
+        
+        if (NCOL(design$cluster)==1 && !any(duplicated(design$cluster))){
             ## ok, element sampling
             if(is.null(design$fpc$popsize)) #with replacement
-                return(list(full=design$prob[ii]*design$prob[jj]),
+                return(list(full=design$prob[ii]*design$prob[jj],
                        first=design$prob[ii],
-                       cond=rep(1,length(ii)))
-            else if(all.equal(as.vector(design$allprob),
+                       cond=rep(1,length(ii))))
+            else if(is_close(as.vector(design$allprob),
                               as.vector(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
                 # srs, possibly stratified
                 n<-design$fpc$sampsize
@@ -88,14 +93,14 @@ pi_from_design<-function(design, ii,jj){
                             first=pi[ii],
                             cond=rep(1,length(ii))))
             }
-        } else if (all(by(design$prob,design$cluster, function(x) length(unique(x)))==1)) {
+        } else if (all(by(design$prob, design$cluster[,1], function(x) length(unique(x)))==1)) {
             ## possibly ok, sampling of whole clusters
             warning("assuming no subsampling within clusters because multi-stage weights were not given")
              if(is.null(design$fpc$popsize)) #with replacement
                  return(list(full=design$prob[ii],
                              first=design$prob[ii],
                              cond=rep(1, length(ii))))
-            else if(all.equal(as.vector(design$allprob),
+            else if(is_close(as.vector(design$allprob),
                               as.vector(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
                 # srs, possibly stratified
                 n<-design$fpc$sampsize
@@ -107,9 +112,9 @@ pi_from_design<-function(design, ii,jj){
                 ## Hajek high entropy: Brewer p153
                 pi<-design$allprob
                 denom<-ave(1-pi, design$strata,FUN=sum)
-                samestrata<-(design$strata[ii]==design$strata[jj])
-                return(list(full=pi[ii],
-                            first=pi[ii],
+                samestrata<-(design$strata[ii,1]==design$strata[jj,1])
+                return(list(full=pi[ii,1],
+                            first=pi[ii,1],
                             cond=rep(1,length(ii))))
             }
         } else {
