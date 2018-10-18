@@ -12,7 +12,7 @@ clusters are the same as the sampling clusters at the second-last stage
 of sampling. 
 }
 \usage{
-svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE, design=NULL, return.devfun=FALSE)
+svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE)
 \method{coef}{svy2lme}(object,...,random=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -21,32 +21,16 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE, design=NULL, return.devfun
     Model formula as in the \code{lme4} package, specifying a single
     grouping variable (cluster) for the random effects
   }
-  \item{data}{
-    data frame
-  }
-  \item{p1}{
-    Vector of sampling probabilities for the clusters
-  }
-  \item{p2}{
-    if not \code{NULL}, a vector of sampling probabilities for
-    observations conditional on their cluster being sampled:
-    these are treated as if they were sampled with replacement. 
-  }
-  \item{N2}{
-    if \code{p2} is \code{NULL}, the size of the clusters sampling
-    units (in the population). The subsampling is treated as
-    SRS without replacement.
+  \item{design}{
+    A survey design object produced by \code{survey::svydesign}. The
+    pairwise weights will be computed from this design, which must have
+    separate probabilities or weights for each stage of sampling.
   }
   \item{sterr}{
     Estimate standard errors for fixed effects? Set to \code{FALSE} for
     greater speed when using resampling to get standard errors.
   }
-  \item{design}{
-    A survey design object produced by \code{survey::svydesign}. The
-    PSUs and stage-one strata from this object will be used to estimate
-    standard errors for the fixed effects, as if the PSUs were sampled
-    with replacement within strata.
-  }
+
   \item{return.devfun}{If \code{TRUE}, return the deviance function as a
     component of the object. This will increase the memory use
     substantially, but allows for bootstrapping}
@@ -78,7 +62,7 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE, design=NULL, return.devfun
     and random intercept forced to be zero.
     
     The internal parametrisation of the variance components uses the
-    Cholesky decomposition of the relative vairance matrix (the variance
+    Cholesky decomposition of the relative variance matrix (the variance
     matrix divided by the residual variance), as in
     \code{lme4::lmer}. The component \code{object$s2} contains the
     estimated residual variance and the component \code{object$opt$par}
@@ -89,13 +73,14 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE, design=NULL, return.devfun
     Standard errors of the fixed effects are currently estimated using a
     "with replacement" approximation, valid when the sampling fraction
     is small and superpopulation (model, process) inference is
-    intended. If no \code{design} argument is applied, the standard
-    errors are the same as those proposed by Yi et al.  If a design
-    argument is supplied, the influence functions are added up within
+    intended. Tthe influence functions are added up within
     cluster, centered within strata, the residuals added up within strata, and then
     the crossproduct is taken within each stratum. The stratum variance
     is scaled by \code{ni/(ni-1)} where \code{ni} is the number of PSUs
-    in the stratum, and then added up across strata.
+    in the stratum, and then added up across strata. When the sampling
+    and model structure are the same, this is the estimator of Yi et al,
+    but it also allows for there to be sampling stages before the stages
+    that are modelled.
   
 }
 \value{
@@ -118,13 +103,13 @@ svy2lme(formula, data, p1, p2, N2 = NULL, sterr=TRUE, design=NULL, return.devfun
 }
 \examples{
 
-df<-data.frame(x=rnorm(1000*20),g=rep(1:1000,each=20), t=rep(1:20,1000))
+df<-data.frame(x=rnorm(1000*20),g=rep(1:1000,each=20), t=rep(1:20,1000), id=1:20000)
 df$u<-with(df, rnorm(1000)[g])
 
 df$y<-with(df, x+u+rnorm(1000,s=2))
 
 ## oversample extreme `u` to bias random-intercept variance
-pg<-exp(abs(df$u/2)-2)[df$t==1]
+pg<-exp(abs(df$u/2)-2.2)[df$t==1]
 
 in1<-rbinom(1000,1,pg)==1
 in2<-rep(1:5, length(in1))
@@ -137,11 +122,15 @@ N2<-rep(20,nrow(sdf))
 ## Population values
 lme4::lmer(y~x+(1|g), data=df)
 
-## Naive estimator
+## Naive estimator: higher intercept variance
 lme4::lmer(y~x+(1|g), data=sdf)
 
 ##pairwise estimator
-pair<-svy2lme(y~x+(1|g),data=sdf,p1=p1,N2=N2)
+sdf$w1<-1/p1
+sdf$w2<-20/5
+
+design<-survey::svydesign(id=~g+id, data=sdf, weights=~w1+w2)
+pair<-svy2lme(y~x+(1|g),design=design)
 pair
 
 

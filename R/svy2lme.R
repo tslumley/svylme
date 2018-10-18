@@ -61,8 +61,105 @@ vcov.boot2lme<-function(object, parameter=c("beta","theta","s2","relSD","SD","re
     }
 
 
-svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL, return.devfun=FALSE){
 
+pi_from_design<-function(design, ii,jj){
+    if (NCOL(design$allprob)==1){
+        ## No multistage weights
+        if (!any(duplicated(design$cluster))){
+            ## ok, element sampling
+            if(is.null(design$fpc$popsize)) #with replacement
+                return(list(full=design$prob[ii]*design$prob[jj]),
+                       first=design$prob[ii],
+                       cond=rep(1,length(ii)))
+            else if(all.equal(as.vector(design$allprob),
+                              as.vector(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
+                # srs, possibly stratified
+                n<-design$fpc$sampsize
+                N<-design$fpc$popsize
+                return(list(full= n[ii]*(n[jj]-1)/( N[ii]*(N[jj]-1)),
+                            first=n[ii]/N[ii],
+                            cond=rep(1,length(ii))))
+            } else {
+                ## Hajek high entropy: Brewer p153
+                pi<-design$allprob
+                denom<-ave(1-pi, design$strata,FUN=sum)
+                samestrata<-(design$strata[ii]==design$strata[jj])
+                return(list(full=pi[ii]*pi[jj]*(1- ifelse(samestrata, (1-pi[ii])*(1-pi[jj])/denom, 0)),
+                            first=pi[ii],
+                            cond=rep(1,length(ii))))
+            }
+        } else if (all(by(design$prob,design$cluster, function(x) length(unique(x)))==1)) {
+            ## possibly ok, sampling of whole clusters
+            warning("assuming no subsampling within clusters because multi-stage weights were not given")
+             if(is.null(design$fpc$popsize)) #with replacement
+                 return(list(full=design$prob[ii],
+                             first=design$prob[ii],
+                             cond=rep(1, length(ii))))
+            else if(all.equal(as.vector(design$allprob),
+                              as.vector(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
+                # srs, possibly stratified
+                n<-design$fpc$sampsize
+                N<-design$fpc$popsize
+                return(list(full= n[ii]/N[ii],
+                            first=n[ii]/N[ii],
+                            cond=rep(1,length(ii))))
+            } else {
+                ## Hajek high entropy: Brewer p153
+                pi<-design$allprob
+                denom<-ave(1-pi, design$strata,FUN=sum)
+                samestrata<-(design$strata[ii]==design$strata[jj])
+                return(list(full=pi[ii],
+                            first=pi[ii],
+                            cond=rep(1,length(ii))))
+            }
+        } else {
+            ## not ok
+            stop("you need weights/probabilities for each stage of sampling")
+        }       
+    }
+
+    ## If we're here, we have multistage weights
+    if (ncol(design$allprob)!=ncol(design$cluster)){
+        ## ? can't happen
+        stop("number of stages of sampling does not match number of stages of weights")
+    }
+
+    if(is.null(design$fpc$popsize)){ #with replacement
+        last<-ncol(design$allprob)
+        return(list(full=design$prob[ii]*design$allprob[jj,last],
+                    first=apply(design$allprob[ii,-last, drop=FALSE], 1, prod),
+                    cond=design$allprob[ii,last]*design$allprob[jj,last]))
+    }
+    if(all.equal(as.matrix(design$allprob), as.matrix(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
+        ## multistage stratified random sampling
+        last<-ncol(design$allprob)
+        n<-design$fpc$sampsize
+        N<-design$fpc$popsize
+        pstages <- n[ii,]*(n[jj,]-1)/(N[ii,]*(N[jj,]-1))
+        return(list(full=apply((n[ii,]/N[ii,])[,-last,drop=FALSE],1,prod)*pstages[,last],
+                    first=apply((n[ii,]/N[ii,])[,-last,drop=FALSE],1,prod),
+                    cond=pstages[,last]))
+    }
+
+    ## Hajek high entropy: Brewer p153
+    first<-cpwt<-rep_len(1,length(ii))
+    for (i in 1:ncol(allprob)){
+        pi<-design$allprob[,i]
+        denom<-ave(1-pi, design$strata[,i],FUN=sum)
+        samestrata<-(design$strata[ii,i]==design$strata[jj,i])
+        if (i==ncol(allprob))
+            cpwt<-cpwt*pi[ii]*pi[jj]*(1- ifelse(samestrata, (1-pi[ii])*(1-pi[jj])/denom, 0))
+        else
+            first<-first*pi[ii]
+    }
+    return(list(full=first*cpwt, first= first, cond=cpwt))
+
+}
+
+svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
+
+    data<-model.frame(design)
+    
     ## Use unweighted model to get starting values and set up variables
     m0<-lme4::lmer(formula,data,REML=FALSE)
 
@@ -97,16 +194,21 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL, return.de
     beta<-beta0<-lme4::fixef(m0)
 
     ## second-order weights
-    if (is.null(N2)){
-        ## using probabilities
-        pwt2 <- (1/p2[ii])*(1/p2[jj])
-        pwts<- (1/p1[ii])*pwt2  ## with replacement at stage 2
-    } else {
-        ## using cluster size
-        n2<-ave(as.numeric(g), g, FUN=length)
-        pwt2<-N2[ii]*(N2[jj]-1)/(n2[ii]*(n2[ii]-1))
-        pwts<-(1/p1[ii])*pwt2  ## SRS without replacement at stage 2
-    }
+    allpwts<-pi_from_design(design,ii,jj)
+    pwts<-1/allpwts$full
+    pwt2<-1/allpwts$cond
+    p1<-allpwts$first
+    
+    ## if (is.null(N2)){
+    ##     ## using probabilities
+    ##     pwt2 <- (1/p2[ii])*(1/p2[jj])
+    ##     pwts<- (1/p1[ii])*pwt2  ## with replacement at stage 2
+    ## } else {
+    ##     ## using cluster size
+    ##     n2<-ave(as.numeric(g), g, FUN=length)
+    ##     pwt2<-N2[ii]*(N2[jj]-1)/(n2[ii]*(n2[ii]-1))
+    ##     pwts<-(1/p1[ii])*pwt2  ## SRS without replacement at stage 2
+    ## }
 
     ## variance matrix of random effects
     qi<-sapply(m0@cnms,length)
@@ -207,7 +309,7 @@ svy2lme<-function(formula,data, p1,p2,N2=NULL,sterr=TRUE, design=NULL, return.de
             Xjj*pwt2*(inv12*r1)
 
         ## cluster weights
-        p1g<-p1[ii][!duplicated(g[ii])]
+        p1g<-p1[!duplicated(g[ii])]
 
         if (is.null(design)){
             ## sandwich estimator

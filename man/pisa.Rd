@@ -36,16 +36,19 @@ data(pisa)
 
 ## This model doesn't make a lot of sense, but it's the one in the
 ## Stata documentation because the outcome variable is numeric.
+
+pisa$w_condstuwt<-with(pisa, w_fstuwt/wnrschbw)
+pisa$id_student<-1:nrow(pisa)
+
+dpisa<-survey::svydesign(id=~id_school+id_student, weight=~wnrschbw+w_condstuwt, data=pisa)
+
+
+svy2lme(isei~(1+female|id_school)+female+high_school+college+one_for+both_for+test_lang,
+	design=dpisa)
 svy2lme(isei~(1|id_school)+female+high_school+college+one_for+both_for+test_lang,
-	data=pisa, p1=1/pisa$wnrschbw,p2=pisa$wnrschbw/pisa$w_fstuwt)
-
-svy2lme(isei~(1+female|id_school)+female+high_school+college+one_for+both_for+test_lang,
-	data=pisa, p1=1/pisa$wnrschbw,p2=pisa$wnrschbw/pisa$w_fstuwt)
+	design=dpisa)
 
 
-dpisa<-survey::svydesign(id=~id_school, weight=~w_fstuwt, data=pisa)
-svy2lme(isei~(1+female|id_school)+female+high_school+college+one_for+both_for+test_lang,
-	data=pisa, p1=1/pisa$wnrschbw,p2=pisa$wnrschbw/pisa$w_fstuwt, design=dpisa)
 
 
 }
