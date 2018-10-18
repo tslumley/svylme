@@ -1,7 +1,12 @@
 
 
-boot2lme<-function(model, basewts, replicates, scale, rscales=NULL,  verbose=FALSE){
+boot2lme<-function(model,rdesign,  verbose=FALSE){
 
+    basewts<-weights(rdesign, "sampling")
+    replicates<-weights(rdesign, "analysis")
+    scale<-rdesign$scale
+    rscales<-rdesign$rscales
+    
     nrep<-ncol(replicates)
     pwt0<-get("pwts",environment(model$devfun))
     if (is.null(rscales)) rscales<-rep(1,nrep)
