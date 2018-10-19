@@ -117,6 +117,8 @@ lme4::lmer(api00~(1|dnum)+ell+mobility+api99, data=apipop)
 
 ## Simulated
 
+set.seed(2000-2-29)
+
 df<-data.frame(x=rnorm(1000*20),g=rep(1:1000,each=20), t=rep(1:20,1000), id=1:20000)
 df$u<-with(df, rnorm(1000)[g])
 
