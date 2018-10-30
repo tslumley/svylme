@@ -8,8 +8,7 @@ Resampling variances for svy2lme
   Computes variance estimates for the weighted-pairwise-likelihood linear mixed models fitted by \code{\link{svy2lme}} using replicate weights.  The replicate weights for a pair are obtained by dividing by the sampling weight and then multiplying by the replicate weight. There will be a warning if the ratio of replicate weight to sampling weight differs for observations in the same pair. 
 }
 \usage{
-boot2lme(model, basewts, replicates, scale, rscales = NULL,
-   verbose = FALSE)
+boot2lme(model, rdesign,  verbose = FALSE)
 \method{vcov}{boot2lme}<-function(object,
    parameter=c("beta", "theta","s2", "relSD" ,"SD","relVar","fullVar"),
    ...)
@@ -19,18 +18,10 @@ boot2lme(model, basewts, replicates, scale, rscales = NULL,
   \item{model}{
 A model returned by \code{svy2lme} with the \code{devfun=TRUE} option
 }
-  \item{basewts}{
-vector of sampling weights
+  \item{rdesign}{
+  replicate-weights design corresponding to the design used to fit the model, see example
 }
-  \item{replicates}{
-matrix of replicate weights
-}
-  \item{scale}{
-see Details below
-}
-  \item{rscales}{
-see Details below
-}
+ 
   \item{verbose}{
 print progess information
 }
@@ -41,8 +32,7 @@ print progess information
   entire relative variance matrix, entire variance matrix}
 }
 \details{
-The variance is estimated from the replicates \code{thetastar} and original point estimate \code{theta} as \code{scale*sum(rscales* (thetastar-theta)^2)}. See the example for how to extract all the necessary information from a replicate-weights survey design object.
-
+The variance is estimated from the replicates \code{thetastar} and original point estimate \code{theta} as \code{scale*sum(rscales* (thetastar-theta)^2)}. 
 }
 \value{
  For \code{boot2lme}, an object of class \code{boot2lme} with components
@@ -63,16 +53,17 @@ The variance is estimated from the replicates \code{thetastar} and original poin
 ##takes a few minutes
 data(pisa)
 
-dpisa<-survey::svydesign(id=~id_school, weight=~w_fstuwt, data=pisa)
+pisa$w_condstuwt<-with(pisa, w_fstuwt/wnrschbw)
+pisa$id_student<-1:nrow(pisa)
+
+dpisa<-survey::svydesign(id=~id_school+id_student, weight=~wnrschbw+w_condstuwt, data=pisa)
 
 m<-svy2lme(isei~(1+female|id_school)+female+high_school+college+one_for+both_for+test_lang,
-	data=pisa, p1=1/pisa$wnrschbw,p2=pisa$wnrschbw/pisa$w_fstuwt, design=dpisa,
-	return.devfun=TRUE)
+	design=dpisa, return.devfun=TRUE)
 
 bpisa<-as.svrepdesign(dpisa, type="bootstrap", replicates=100)
 
-b<-boot2lme(m, weights(bpisa,"sampling"), weights(bpisa,"analysis"),
-	       bpisa$scale, bpisa$rscales,verbose=TRUE)
+b<-boot2lme(m, bpisa, verbose=TRUE)
 str(b)
 
 vcov(b,"beta")
