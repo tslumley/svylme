@@ -390,7 +390,7 @@ print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
 coef.svy2lme<-function(object,...,random=FALSE){
     if (random) {
         L<-object$L
-        s2<-object$s2
+        s2<-drop(object$s2)
         dimnames(L)<-list(object$znames,object$znames)
         list(s2=s2, varb=L*s2)
     } else 
