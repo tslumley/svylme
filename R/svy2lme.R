@@ -202,7 +202,10 @@ svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
 
 
     ## all pairs within same cluster
-    ij<-subset(expand.grid(i=1:n,j=1:n), (g[i] == g[j]) & (i<j))
+    ##ij<-subset(expand.grid(i=1:n,j=1:n), (g[i] == g[j]) & (i<j))
+    ij<-outer(g,g,"==");ij<-ij & upper.tri(ij);ij<-which(ij,arr.ind=TRUE)
+
+    
     ## columns of indices for first and second observation in a pair
     ii<-ij[,1]
     jj<-ij[,2]
