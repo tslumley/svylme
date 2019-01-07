@@ -1,3 +1,7 @@
+0.4	get pairwise weights from the survey design object
+
+        Fix for multiple random terms -- restructuring of Z was wrong
+
 0.3	Make a start on replicate-weights variances.
 
 0.2   	Allow multiple random terms to get independent random effects

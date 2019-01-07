@@ -145,7 +145,9 @@ pi_from_design<-function(design, ii,jj){
         last<-ncol(design$allprob)
         n<-design$fpc$sampsize
         N<-design$fpc$popsize
-        pstages <- n[ii,]*(n[jj,]-1)/(N[ii,]*(N[jj,]-1))
+        samestrata<-(design$strata[ii, ]==design$strata[jj, ])
+        pstages <-(n[ii,]/N[ii,])*(samestrata*((n[jj,]-1)/(N[jj,]-1)) + (1-samestrata)*(n[jj,]/N[jj,]))
+        
         return(list(full=apply((n[ii,]/N[ii,])[,-last,drop=FALSE],1,prod)*pstages[,last],
                     first=apply((n[ii,]/N[ii,])[,-last,drop=FALSE],1,prod),
                     cond=pstages[,last]))
@@ -181,13 +183,23 @@ svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
     g<-m0@flist[[1]]
     ## number of clusters
     n1<-length(unique(g))
-    ## number of variance parameters
-    q<-nrow(m0@pp$Zt)/n1
+    ## number of random effects
+    qis<-sapply(m0@cnms,length)
+    q<-sum(qis)
+    n<-NROW(X)
 
     ## Z in lme4::lmer has separate columns for each cluster; restructure it
-    Z<-crossprod(m0@pp$Zt, (outer(1:(n1*q),1:q,function(i,j) ((i-j) %% q)==0)*1))
+    Z<-matrix(nrow=n, ncol=sum(qis))
+    pos<-0
+    npos<-0
+    for(qi in qis){
+        Z[,pos+(1:qi)]<-as.matrix(crossprod(m0@pp$Zt[npos+(1:(n1*qi)),,drop=FALSE], outer(1:(n1*qi),1:qi,function(i,j) ((i-j) %% qi)==0)*1))
+        pos<-pos+qi
+        npos<-npos+qi*n1
+    }
+    
+    ##Z<-crossprod(m0@pp$Zt, (outer(1:(n1*q),1:q,function(i,j) ((i-j) %% q)==0)*1))
 
-    n<-NROW(X)
 
     ## all pairs within same cluster
     ij<-subset(expand.grid(i=1:n,j=1:n), (g[i] == g[j]) & (i<j))
