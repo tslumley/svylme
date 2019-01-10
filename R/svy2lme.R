@@ -168,6 +168,24 @@ pi_from_design<-function(design, ii,jj){
 
 }
 
+getpairs<-function(gp, TOOBIG=1000){
+    n<-length(gp)
+    if (n < TOOBIG){
+        ij<-outer(gp,gp,"==")
+        ij<-ij & upper.tri(ij)
+        return(which(ij,arr.ind=TRUE))
+    } 
+
+    ng<-ave(1:n, gp, FUN=length)
+    j<-rep(1:n,ng)
+    i<-numeric(length(j))
+    for (g in unique(gp)){
+        this<- which(gp[j]==g)
+        i[this] <-which(gp==g)
+        }
+    data.frame(i=i[i<j],j=j[i<j])
+    }
+
 svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
 
     data<-model.frame(design)
@@ -202,9 +220,10 @@ svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
 
 
     ## all pairs within same cluster
-    ##ij<-subset(expand.grid(i=1:n,j=1:n), (g[i] == g[j]) & (i<j))
-    ij<-outer(g,g,"==");ij<-ij & upper.tri(ij);ij<-which(ij,arr.ind=TRUE)
-
+    ## Conceptually:
+    ## ij<-subset(expand.grid(i=1:n,j=1:n), (g[i] == g[j]) & (i<j))
+    ## but needs to work when n^2 is too big to construct
+    ij<-getpairs(g)
     
     ## columns of indices for first and second observation in a pair
     ii<-ij[,1]
@@ -346,12 +365,13 @@ svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
             PSUg<-design$cluster[,1][ii[!duplicated(g[ii])]]
             
             inffun<-rowsum(inffun, PSUg,reorder=FALSE)
-            stratPSU<-design$strata[,1][ii[!duplicated(design$cluster[,1][ii])]] ##CHECKME?
+            stratPSU<-design$strata[,1][ii[!duplicated(design$cluster[,1][ii])]] ##FIXME to allow single-PSU strata?
 
             one<-rep(1,NROW(inffun))
             ni<-ave(one,stratPSU,FUN=NROW)
-            centered<- inffun-ave(inffun, stratPSU, FUN=mean)
-            crossprod(centered*sqrt(ni/(ni-1)))
+            centering<-apply(inffun,2,function(x) ave(x, stratPSU, FUN=mean))
+            centered<- inffun-centering
+            crossprod(centered*sqrt(ni/ifelse(ni==1,1,(ni-1))))
         }
     }
     
