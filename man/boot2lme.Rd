@@ -9,7 +9,7 @@ Resampling variances for svy2lme
 }
 \usage{
 boot2lme(model, rdesign,  verbose = FALSE)
-\method{vcov}{boot2lme}<-function(object,
+\method{vcov}{boot2lme}(object,
    parameter=c("beta", "theta","s2", "relSD" ,"SD","relVar","fullVar"),
    ...)
 }
@@ -23,7 +23,7 @@ A model returned by \code{svy2lme} with the \code{devfun=TRUE} option
 }
  
   \item{verbose}{
-print progess information
+print progess information?
 }
 \item{object}{returned by \code{boot2lme}}
 \item{parameter}{Variance matrix for: regression parameters, relative variance
