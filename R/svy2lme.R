@@ -193,12 +193,19 @@ svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
     ## Use unweighted model to get starting values and set up variables
     m0<-lme4::lmer(formula,data,REML=FALSE)
 
+    ## remove missing from design
+    if (!is.null(naa<-attr(m0@frame,"na.action"))){
+        design<-design[-naa,]
+    }
+
+
     ## Extract varables
     y<-m0@resp$y
     X<-m0@pp$X
 
     ## cluster indicator
     g<-m0@flist[[1]]
+    
     ## number of clusters
     n1<-length(unique(g))
     ## number of random effects
