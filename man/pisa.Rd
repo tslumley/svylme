@@ -29,7 +29,7 @@ Data from the PISA survey of schools, obtained from Stata, who obtained it from 
 Data downloaded from \url{http://www.stata-press.com/data/r15/pisa2000.dta}
 }
 \references{
-Rabe-Hesketh, S., and A. Skrondal.  2006.  Multilevel modelling of complex survey data.Journal of the Royal StatisticalSociety,  Series  A169:  805–827
+Rabe-Hesketh, S., and A. Skrondal.  2006.  Multilevel modelling of complex survey data.Journal of the Royal StatisticalSociety,  Series  A. 169:  805-827
 }
 \examples{
 data(pisa)

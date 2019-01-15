@@ -155,11 +155,11 @@ pi_from_design<-function(design, ii,jj){
 
     ## Hajek high entropy: Brewer p153
     first<-cpwt<-rep_len(1,length(ii))
-    for (i in 1:ncol(allprob)){
+    for (i in 1:ncol(design$allprob)){
         pi<-design$allprob[,i]
         denom<-ave(1-pi, design$strata[,i],FUN=sum)
         samestrata<-(design$strata[ii,i]==design$strata[jj,i])
-        if (i==ncol(allprob))
+        if (i==ncol(design$allprob))
             cpwt<-cpwt*pi[ii]*pi[jj]*(1- ifelse(samestrata, (1-pi[ii])*(1-pi[jj])/denom, 0))
         else
             first<-first*pi[ii]

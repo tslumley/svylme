@@ -1,5 +1,6 @@
 \name{boot2lme}
 \alias{boot2lme}
+\alias{vcov.boot2lme}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Resampling variances for svy2lme
@@ -26,6 +27,7 @@ A model returned by \code{svy2lme} with the \code{devfun=TRUE} option
 print progess information?
 }
 \item{object}{returned by \code{boot2lme}}
+\item{\dots}{for method compatibility}
 \item{parameter}{Variance matrix for: regression parameters, relative variance
   parameters on Cholesky square root scale, residual variance, relative
   standard errors of random effects, standard errors of random effects,

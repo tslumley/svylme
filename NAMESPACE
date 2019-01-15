@@ -1,8 +1,10 @@
 import(Matrix)
 import(methods)
 import(minqa)
+import(survey)
 importFrom(utils,setTxtProgressBar)
 importFrom(utils,txtProgressBar)
+importFrom("stats", "ave", "model.frame", "pnorm", "weights")
 export(svy2lme)
 export(boot2lme)
 

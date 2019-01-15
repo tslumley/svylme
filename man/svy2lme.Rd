@@ -1,5 +1,6 @@
 \name{svy2lme}
 \alias{svy2lme}
+\encoding{utf8}
 \alias{coef.svy2lme}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
@@ -13,7 +14,7 @@ of sampling.
 }
 \usage{
 svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE)
-\method{coef}{svy2lme}(object,...,random=TRUE)
+\method{coef}{svy2lme}(object,...,random=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -34,7 +35,8 @@ svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE)
   \item{return.devfun}{If \code{TRUE}, return the deviance function as a
     component of the object. This will increase the memory use
     substantially, but allows for bootstrapping}
-    \item{object}{\code{svy2lme} object}
+  \item{object}{\code{svy2lme} object}
+  \item{\dots}{for method compatibility}
     \item{random}{if \code{TRUE}, the variance components rather than
     the fixed effects}
 }
