@@ -447,7 +447,7 @@ coef.svy2lme<-function(object,...,random=FALSE){
         dimnames(L)<-list(object$znames,object$znames)
         list(s2=s2, varb=L*s2)
     } else 
-        object$beta
+        drop(object$beta)
 }
 
 vcov.svy2lme<-function(object,...){
