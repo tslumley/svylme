@@ -205,6 +205,12 @@ svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
 
     ## cluster indicator
     g<-m0@flist[[1]]
+    if (sterr){
+        ll<-NCOL(design$cluster)
+        gpsu<-g[!duplicated(design$cluster[,ll])]
+        if(!unique(gpsu))
+            stop("model clusters must be nested in design clusters")
+        }
     
     ## number of clusters
     n1<-length(unique(g))

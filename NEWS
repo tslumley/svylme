@@ -4,6 +4,8 @@
 
 	Allow for removal of missing data
 
+	check that model clusters are nested in design PSUs
+
 0.3	Make a start on replicate-weights variances.
 
 0.2   	Allow multiple random terms to get independent random effects
