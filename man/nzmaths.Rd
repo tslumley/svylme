@@ -34,7 +34,7 @@ Data on maths performance, gender, some problem-solving variables and some schoo
 }
 
 \source{
-A subset extracted from the \code{PISA2012lite} R package, \url{https://github.com/pbiacek/PISA2012lite}
+A subset extracted from the \code{PISA2012lite} R package, \url{https://github.com/pbiecek/PISA2012lite}
 }
 \references{
 OECD (2013) PISA 2012 Assessment and Analytical Framework: Mathematics, Reading, Science, Problem Solving and Financial Literacy. OECD Publishing.
