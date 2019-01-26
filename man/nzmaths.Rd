@@ -11,7 +11,7 @@ Data on maths performance, gender, some problem-solving variables and some schoo
 \format{
   A data frame with 4291 observations on the following 26 variables.
   \describe{
-    \item{\code{SCHOOLID}}{School ID}}
+    \item{\code{SCHOOLID}}{School ID}
     \item{\code{CNT}}{Country id: a factor with levels \code{New Zealand}}
     \item{\code{STRATUM}}{a factor with levels \code{NZL0101} \code{NZL0102} \code{NZL0202} \code{NZL0203}}
     \item{\code{OECD}}{Is the country in the OECD?}
@@ -30,7 +30,7 @@ Data on maths performance, gender, some problem-solving variables and some schoo
     \item{\code{SMRATIO}}{Number of students per maths teacher}
     \item{\code{W_FSCHWT}}{Design weight for school}
     \item{\code{condwt}}{Design weight for student given school}
-  }
+      }
 }
 
 \source{
