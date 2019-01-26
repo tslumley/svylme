@@ -41,7 +41,8 @@ OECD (2013) PISA 2012 Assessment and Analytical Framework: Mathematics, Reading,
 }
 \examples{
 data(nzmaths)
-des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE, weights=~W_FSCHWT+condwt, data=nzmaths)
+des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
+	weights=~W_FSCHWT+condwt, data=nzmaths)
 
 m1<-svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
 
