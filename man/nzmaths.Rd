@@ -34,7 +34,7 @@ Data on maths performance, gender, some problem-solving variables and some schoo
 }
 
 \source{
-A subset extracted from the \code{PISA2012lite} R package, \url{https::/github.com/pbiacek/PISA2012lite}
+A subset extracted from the \code{PISA2012lite} R package, \url{https://github.com/pbiacek/PISA2012lite}
 }
 \references{
 OECD (2013) PISA 2012 Assessment and Analytical Framework: Mathematics, Reading, Science, Problem Solving and Financial Literacy. OECD Publishing.
@@ -43,12 +43,7 @@ OECD (2013) PISA 2012 Assessment and Analytical Framework: Mathematics, Reading,
 data(nzmaths)
 des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE, weights=~W_FSCHWT+condwt, data=nzmaths)
 
-## first 'plausible value'
 m1<-svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
-l1<-lme4::lmer(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, data=nzmaths)
-
-## second 'plausible value'
-m2<-svy2lme(PV2MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
 
 }
 \keyword{datasets}
