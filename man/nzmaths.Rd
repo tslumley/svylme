@@ -41,14 +41,14 @@ OECD (2013) PISA 2012 Assessment and Analytical Framework: Mathematics, Reading,
 }
 \examples{
 data(nzmaths)
-des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE, weights=~W_FSCHWT+condwt, data=mathdata)
+des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE, weights=~W_FSCHWT+condwt, data=nzmaths)
 
 ## first 'plausible value'
-m1<-svy2lme(PV1MATH~ (1+ ST04Q01 |schlid)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
-l1<-lmer(PV1MATH~ (1+ ST04Q01 |schlid)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, data=mathdata)
+m1<-svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
+l1<-lme4::lmer(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, data=nzmaths)
 
 ## second 'plausible value'
-m2<-svy2lme(PV2MATH~ (1+ ST04Q01 |schlid)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
+m2<-svy2lme(PV2MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
 
 }
 \keyword{datasets}
