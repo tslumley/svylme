@@ -6,6 +6,7 @@ importFrom(utils,setTxtProgressBar)
 importFrom(utils,txtProgressBar)
 importFrom("stats", "ave", "model.frame", "pnorm", "weights")
 export(svy2lme)
+export(svy2lmeNG)
 export(boot2lme)
 
 S3method(print,svy2lme)
