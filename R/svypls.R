@@ -30,21 +30,43 @@
 ## lmer(y ~ x + (z|grp))
 
 
-svyseqlme <- function(y, mmFE, mmRE, grp,
-                     aweights, offset = numeric(n),
-                     REML = TRUE, yweights, uweights){
+## svyseqlme <- function(y, mmFE, mmRE, grp,
+##                     aweights, offset = numeric(n),
+##                     REML = FALSE, yweights, uweights){
+
+svyseqlme<-function(formula, data, REML=FALSE, aweights, yweights,uweights){
+
+    m0 <-lmer(formula, data, REML=REML)
+    
     n<-length(y)
-    if(missing(aweights)) aweights <- rep(1,length(y))
-    initRE <- mkRanefStructures(grp, mmRE)
-    devfun <- with(initRE, {
-        pls(mmFE,y,Zt,Lambdat,
-            thfun = function(theta) theta[Lind],
+
+    X<-m0@pp$X
+    Zt<-m0@pp$Zt
+    Lambdat<-m0@pp$Lambdat
+    thfun<- with(m0@pp, function(theta) theta[Lind])
+    y<-m0@resp$y
+    offset<-m0@resp$offset
+
+    devfun <- pls(X,y,Zt,Lambdat,
+            thfun = thfun,
             aweights = aweights, offset = offset,
-            REML = REML, yweights=yweights, uweights=uweights)})
-    varcomp<-with(initRE, {
-        bobyqa(initRE$theta, devfun,
-               lower = lower, upper = upper)})
-    list(devfun=devfun, varcomp=varcomp, beta=environment(devfun)$beta)
+            REML = REML, yweights=yweights, uweights=uweights)
+    varcomp<-bobyqa(m0@pp$theta, devfun,
+               lower = m0@lower, upper = Inf)
+    rval<-list(devfun=devfun, varcomp=varcomp, beta=environment(devfun)$beta, call=m0@call)
+    class(rval)<-"svyseqlme"
+    rval
+}
+
+
+print.svyseqlme<-function(x, ...){
+    cat("LME fitted by sequential pseudolikelihood\n Call:")
+    print(x$call)
+    cat("beta:")
+    print(x$beta)
+    cat("theta:")
+    print(x$varcomp$par)
+
 }
 
 
@@ -52,7 +74,6 @@ pls <- function(X,y,Zt,Lambdat,thfun,aweights,
                 offset = numeric(n),REML = FALSE,
                 yweights=rep(1,n),uweights=rep(1,n),...)
 {
-    # SW: how to test for sparse matrices, without specifying the specific class?
     stopifnot(is.matrix(X)) #  is.matrix(Zt), is.matrix(Lambdat))
     n <- length(y); p <- ncol(X); q <- nrow(Zt)
     stopifnot(nrow(X) == n, ncol(Zt) == n,
