@@ -36,9 +36,8 @@
 
 svyseqlme<-function(formula, data, REML=FALSE, aweights, yweights,uweights){
 
-    m0 <-lmer(formula, data, REML=REML)
+    m0 <-lme4::lmer(formula, data, REML=REML)
     
-    n<-length(y)
 
     X<-m0@pp$X
     Zt<-m0@pp$Zt
@@ -46,6 +45,8 @@ svyseqlme<-function(formula, data, REML=FALSE, aweights, yweights,uweights){
     thfun<- with(m0@pp, function(theta) theta[Lind])
     y<-m0@resp$y
     offset<-m0@resp$offset
+    n<-length(y)
+
 
     devfun <- pls(X,y,Zt,Lambdat,
             thfun = thfun,
