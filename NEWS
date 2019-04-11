@@ -1,3 +1,6 @@
+0.5     add initial version of sequential pseudolikelihood
+	(-gllamm- method) with svyseqlme()
+
 0.4	get pairwise weights from the survey design object
 
         Fix for multiple random terms -- restructuring of Z was wrong

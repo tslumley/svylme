@@ -1,6 +1,6 @@
 Package: svylme
 Title: Linear Mixed Models for Complex Survey Data
-Version: 0.4
+Version: 0.5
 Author: Thomas Lumley
 Description: Linear mixed models for complex survey data. Currently only handles two-level models for the last two stages of a multistage design.
 Imports: minqa, Matrix,lme4, methods, utils, stats
