@@ -29,15 +29,40 @@
 ## cov2cor(crossprod(Lambdat)[1:2,1:2])
 ## lmer(y ~ x + (z|grp))
 
+scale_weights<-function(design, method){
+    m<-NCOL(design$allprob)
+    if (method=="raw"){
+        w<-vector("list",m-1)
+        wi<-t(apply(design$allprob,1, cumprod))
+        for(i in seq_len(m-1)){
+            w[[i]]<-wi[!duplicated(design$cluster[,i]),i]
+        }
+        w
+    } else if(method=="sample_size"){
+        w<-vector("list",m-1)
+        wi<-t(apply(1/design$allprob,1, cumprod))
+         for(i in seq_len(m-1)){
+            ns<-design$fpc$sampsize[,i+1]
+            if (!is.null(design$fpc$popsize))
+                Ns<-design$fpc$popsize[,i+1]
+            else
+                Ns<-ave(1/design$allprob[,i+1], design$cluster[,i], FUN=sum)
+            w[[i]]<-(wi[,i]*Ns/ns)[!duplicated(design$cluster[,i])]
+         }
+        w
+    }
+    else stop("not implemented yet")
+}
 
-## svyseqlme <- function(y, mmFE, mmRE, grp,
-##                     aweights, offset = numeric(n),
-##                     REML = FALSE, yweights, uweights){
 
-svyseqlme<-function(formula, data, REML=FALSE, aweights, yweights,uweights){
-
+svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effective_sample_size","gk","raw")){
+    data<-model.frame(design)
     m0 <-lme4::lmer(formula, data, REML=REML)
-    
+   
+    ## remove missing from design
+    if (!is.null(naa<-attr(m0@frame,"na.action"))){
+        design<-design[-naa,]
+    }
 
     X<-m0@pp$X
     Zt<-m0@pp$Zt
@@ -47,14 +72,22 @@ svyseqlme<-function(formula, data, REML=FALSE, aweights, yweights,uweights){
     offset<-m0@resp$offset
     n<-length(y)
 
+    yweights<-weights(design,"sampling")
+
+    scaling_method <- match.arg(scale)
+    clweights<-scale_weights(design, method=scaling_method)
+    uweights<-rep(clweights[[1]], each=length(m0@cnms[[1]]))  #FIXME only for two-stage
 
     devfun <- pls(X,y,Zt,Lambdat,
             thfun = thfun,
-            aweights = aweights, offset = offset,
+            aweights = rep(1,n), offset = offset,
             REML = REML, yweights=yweights, uweights=uweights)
     varcomp<-bobyqa(m0@pp$theta, devfun,
-               lower = m0@lower, upper = Inf)
-    rval<-list(devfun=devfun, varcomp=varcomp, beta=environment(devfun)$beta, call=m0@call)
+                    lower = m0@lower, upper = Inf)
+
+    ## FIXME sandwich estimator goes here
+    
+    rval<-list(devfun=devfun, varcomp=varcomp, beta=environment(devfun)$beta, call=sys.call())
     class(rval)<-"svyseqlme"
     rval
 }

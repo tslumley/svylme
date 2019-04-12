@@ -16,20 +16,13 @@ svyseqlme(formula, data, REML = FALSE, aweights, yweights, uweights)
   \item{formula}{
 A model formula, as in \code{lmer}
 }
-  \item{data}{
-A data frame
+  \item{design}{
+A survey design object produced by \code{survey::svydesign}, containing weights for each stage of sampling.
 }
   \item{REML}{
 Should (weighted pseudo)\code{REML} estimation be used instead of (weighted pseudo) likelihood?
 }
-  \item{aweights}{
-Precision weights for the observations (ie, inversely proportional to variances)
-}
-  \item{yweights}{
-Sampling weights for the observations: the ultimate weights at the observation level
-}
-  \item{uweights}{
-Sampling weights for the vector of spherical random effects. These are the cluster sampling weights for the clusters that the effects appear in. (Needs documentation as to ordering for multistage sampling!)
+\item{scale}{How to scale weights}
 }
 }
 \details{
@@ -54,6 +47,15 @@ Rabe-Hesketh, S. and Skrondal, A. (2006). Multilevel modeling of complex survey 
 \code{\link{svy2lme}} for pairwise  pseudolikelihood modelleing
 }
 \examples{
+data(nzmaths)
+des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
+	weights=~W_FSCHWT+condwt, data=nzmaths)
+
+m2<-svyseqlme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
+	design=des,scale="raw")
+	
+m3<-svyseqlme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
+	design=des,scale="sample_size")
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
