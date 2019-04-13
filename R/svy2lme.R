@@ -1,5 +1,4 @@
 
-
 boot2lme<-function(model,rdesign,  verbose=FALSE){
 
     basewts<-weights(rdesign, "sampling")

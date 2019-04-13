@@ -25,7 +25,7 @@ Should (weighted pseudo)\code{REML} estimation be used instead of (weighted pseu
 }
 \item{scale}{How to scale weights}
 }
-}
+
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }

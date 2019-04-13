@@ -85,9 +85,20 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
     varcomp<-bobyqa(m0@pp$theta, devfun,
                     lower = m0@lower, upper = Inf)
 
-    ## FIXME sandwich estimator goes here
+    ## sandwich estimator
+    ## FIXME is wrong
     p<-NCOL(X)
-
+    beta <-environment(devfun)$beta
+    Lambdat<-environment(devfun)$Lambdat
+    ZtW<-environment(devfun)$ZtW
+    Whalf<-environment(devfun)$Whalf
+    YL <- Cholesky(crossprod(Lambdat %*% ZtW)+Whalf, LDL = FALSE)
+    YLX<-solve(YL,X)
+    XVXinv<- solve(crossprod(X, YLX))
+    XVS <-as.matrix(YLX)*as.vector(y-X%*%beta)
+    
+    Vbeta<-XVXinv%*%crossprod(rowsum(XVS, design$cluster[,1]))%*%XVXinv
+    
 
     ## put variance parameters in printable form
     qi<-sapply(m0@cnms,length)
@@ -100,8 +111,8 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
     VC[]<-tcrossprod(Th)
 
     
-    rval<-list(devfun=devfun, varcomp=varcomp, beta=environment(devfun)$beta, call=sys.call(),
-               s2=environment(devfun)$s2hat, znames=m0@cnms[[1]], Vbeta=matrix(ncol=p,nrow=p),
+    rval<-list(devfun=devfun, varcomp=varcomp, beta=beta, call=sys.call(),
+               s2=environment(devfun)$s2hat, znames=m0@cnms[[1]], Vbeta=Vbeta,
                VC=VC)
     class(rval)<-"svyseqlme"
     rval
@@ -142,10 +153,15 @@ pls <- function(X,y,Zt,Lambdat,thfun,aweights,
         RZX <- matrix(0,nrow=q,ncol=p)  # intermediate matrix in solution
         u <- numeric(q)                 # conditional mode of spherical random effects
         s2hat <- numeric(1)
+
+        Whalf <- Diagonal(x=sqrt(as.numeric(yweights)))%*%Wahalf
+        WX <- Whalf %*% X               #used in sandwich estimator
+        Wy <- Whalf %*% y
+        ZtW <- Zt %*% Whalf
+
         function(theta) {
             Lambdat@x[] <<- thfun(theta)
             L <<- Cholesky(tcrossprod(Lambdat %*% ZtW)+Wuhalf, LDL = FALSE)
-                                        #update(L, Lambdat %*% ZtW, mult = 1) ## does this need Wuhalf? TL
                                         # solve eqn. 30
             cu[] <<- as.vector(solve(L, solve(L, Lambdat %*% ZtWy, system="P"),
                                      system="L"))
