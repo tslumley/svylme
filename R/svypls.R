@@ -87,10 +87,22 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
 
     ## FIXME sandwich estimator goes here
     p<-NCOL(X)
+
+
+    ## put variance parameters in printable form
+    qi<-sapply(m0@cnms,length)
+    q<-sum(qi)
+    VC<-as.matrix(Matrix::bdiag(lapply(qi,function(i) matrix(1,i,i))))
+    ###(need indicator for where thetas go in the matrix)
+    ThInd<-which((VC==1) & lower.tri(VC,diag=TRUE))
+    Th<-matrix(0,q,q)
+    Th[ThInd]<-varcomp$par
+    VC[]<-tcrossprod(Th)
+
     
     rval<-list(devfun=devfun, varcomp=varcomp, beta=environment(devfun)$beta, call=sys.call(),
-               s2=environment(devfun)$s2hat, znames=m0@cnms[[1]], Vbeta<-matrix(ncol=p,nrow=p),
-               L=tcrossprod(thfun(varcomp$par)))
+               s2=environment(devfun)$s2hat, znames=m0@cnms[[1]], Vbeta=matrix(ncol=p,nrow=p),
+               VC=VC)
     class(rval)<-"svyseqlme"
     rval
 }
@@ -177,9 +189,8 @@ print.svyseqlme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     cat(paste(deparse(x$formula),collapse="\n"))
     cat("\nRandom effects:\n")
     theta<-x$varcomp$par
-    L<-x$L
     s<-sqrt(as.vector(x$s2))
-    stdev<- matrix(s*sqrt(diag(L)),ncol=1)
+    stdev<- matrix(s*sqrt(diag(x$VC)),ncol=1)
     rownames(stdev)<-x$znames
     colnames(stdev)<-"Std.Dev."
     print(round(stdev,digits))
@@ -196,10 +207,10 @@ print.svyseqlme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
 
 coef.svyseqlme<-function(object,...,random=FALSE){
     if (random) {
-        L<-x$L
+        VC<-x$VC
         s2<-drop(object$s2)
         dimnames(L)<-list(object$znames,object$znames)
-        list(s2=s2, varb=L*s2)
+        list(s2=s2, varb=VC*s2)
     } else 
         drop(object$beta)
 }

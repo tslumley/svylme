@@ -54,10 +54,11 @@ des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
 
 m2<-svyseqlme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
 	design=des,scale="raw")
-	
+m2
+
 m3<-svyseqlme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
 	design=des,scale="sample_size")
-
+m3
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

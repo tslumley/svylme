@@ -45,6 +45,10 @@ des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
 	weights=~W_FSCHWT+condwt, data=nzmaths)
 
 m1<-svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
+m1
 
+m3<-svyseqlme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
+	design=des,scale="sample_size")
+m3
 }
 \keyword{datasets}
