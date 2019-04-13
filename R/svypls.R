@@ -86,22 +86,16 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
                     lower = m0@lower, upper = Inf)
 
     ## FIXME sandwich estimator goes here
+    p<-NCOL(X)
     
-    rval<-list(devfun=devfun, varcomp=varcomp, beta=environment(devfun)$beta, call=sys.call())
+    rval<-list(devfun=devfun, varcomp=varcomp, beta=environment(devfun)$beta, call=sys.call(),
+               s2=environment(devfun)$s2hat, znames=m0@cnms[[1]], Vbeta<-matrix(ncol=p,nrow=p),
+               L=tcrossprod(thfun(varcomp$par)))
     class(rval)<-"svyseqlme"
     rval
 }
 
 
-print.svyseqlme<-function(x, ...){
-    cat("LME fitted by sequential pseudolikelihood\n Call:")
-    print(x$call)
-    cat("beta:")
-    print(x$beta)
-    cat("theta:")
-    print(x$varcomp$par)
-
-}
 
 
 pls <- function(X,y,Zt,Lambdat,thfun,aweights,
@@ -172,4 +166,44 @@ pls <- function(X,y,Zt,Lambdat,thfun,aweights,
             #ld + fn*(1 + log(2*pi*pwrss))
         }
     })
+}
+
+
+
+ 
+print.svyseqlme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
+    cat("Linear mixed model fitted by sequential pseudolikelihood\n")
+    cat("Formula: ")
+    cat(paste(deparse(x$formula),collapse="\n"))
+    cat("\nRandom effects:\n")
+    theta<-x$varcomp$par
+    L<-x$L
+    s<-sqrt(as.vector(x$s2))
+    stdev<- matrix(s*sqrt(diag(L)),ncol=1)
+    rownames(stdev)<-x$znames
+    colnames(stdev)<-"Std.Dev."
+    print(round(stdev,digits))
+    cat("Residual:\t",round(s,digits))
+    cat("\n Fixed effects:\n")
+    coef<- cbind(beta=x$beta,SE=sqrt(diag(x$Vbeta)),t=x$beta/sqrt(diag(x$Vbeta)))
+    coef<-cbind(coef,p=2*pnorm(-abs(coef[,3])))
+    colnames(coef)<-c("beta","SE","t","p")
+    print(round(coef,digits))
+    cat("\n")
+    invisible(x)
+    }
+
+
+coef.svyseqlme<-function(object,...,random=FALSE){
+    if (random) {
+        L<-x$L
+        s2<-drop(object$s2)
+        dimnames(L)<-list(object$znames,object$znames)
+        list(s2=s2, varb=L*s2)
+    } else 
+        drop(object$beta)
+}
+
+vcov.svyseqlme<-function(object,...){
+    object$Vbeta
 }

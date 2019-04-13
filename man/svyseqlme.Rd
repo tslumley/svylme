@@ -9,8 +9,9 @@ Sequential pseudolikelihood is my name for the estimation approach introduced by
 
 }
 \usage{
-svyseqlme(formula, data, REML = FALSE, aweights, yweights, uweights)
-}
+svyseqlme(formula, design, REML = FALSE,
+scale = c("sample_size", "effective_sample_size", "gk", "raw"))
+    }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{formula}{
