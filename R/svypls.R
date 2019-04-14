@@ -70,18 +70,22 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
                     lower = m0@lower, upper = Inf)
 
     ## sandwich estimator
+    warning("Sandwich variance estimator may still contain nuts")
     p<-NCOL(X)
     beta <-environment(devfun)$beta
     Lambdat<-environment(devfun)$Lambdat
-    ZtW<-environment(devfun)$ZtW
+    ##ZtW<-environment(devfun)$ZtW
+    WZt<-sqrt(uweights)*Zt
     W_y<-environment(devfun)$W_y
-    YL <- Cholesky(crossprod(Lambdat %*% ZtW)+W_y, LDL = FALSE)  ##FIXME really Whalf or W?
+    ##YL <- Cholesky(crossprod(Lambdat %*% ZtW)+W_y, LDL = FALSE)  ##FIXME really Whalf or W?
+    YL <- Cholesky(crossprod(Lambdat %*% WZt)+W_y, LDL = FALSE)  ##FIXME really Whalf or W?
     YLX<-as.matrix(solve(YL,X))
     XVXinv<- solve(crossprod(X, YLX))
     XVS <- YLX*as.vector(y-X%*%beta)
     
-    Vbeta<-XVXinv%*%crossprod(rowsum(XVS, design$cluster[,1]))%*%XVXinv
-    
+    ##Vbeta<-XVXinv%*%crossprod(rowsum(XVS, design$cluster[,1]))%*%XVXinv
+    inffun<-XVS%*%XVXinv
+    Vbeta<-vcov(svytotal(inffun/yweights, design))
 
     ## put variance parameters in printable form
     qi<-sapply(m0@cnms,length)
@@ -93,6 +97,8 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
     Th[ThInd]<-varcomp$par
     VC[]<-tcrossprod(Th)
 
+    names(beta)<-colnames(X)
+    dimnames(Vbeta)<-list(colnames(X),colnames(X))
     
     rval<-list(devfun=devfun, varcomp=varcomp, beta=beta, call=sys.call(),
                s2=environment(devfun)$s2hat, znames=m0@cnms[[1]], Vbeta=Vbeta,
@@ -186,7 +192,7 @@ pls <- function(X,y,Zt,Lambdat,thfun,aweights,
 print.svyseqlme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     cat("Linear mixed model fitted by sequential pseudolikelihood\n")
     cat("Formula: ")
-    cat(paste(deparse(x$formula),collapse="\n"))
+    cat(paste(deparse(x$call$formula),collapse="\n"))
     cat("\nRandom effects:\n")
     theta<-x$varcomp$par
     s<-sqrt(as.vector(x$s2))
