@@ -74,11 +74,11 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
     beta <-environment(devfun)$beta
     Lambdat<-environment(devfun)$Lambdat
     ZtW<-environment(devfun)$ZtW
-    Whalf<-environment(devfun)$Whalf
-    YL <- Cholesky(crossprod(Lambdat %*% ZtW)+Whalf, LDL = FALSE)
-    YLX<-solve(YL,X)
+    W_y<-environment(devfun)$W_y
+    YL <- Cholesky(crossprod(Lambdat %*% ZtW)+W_y, LDL = FALSE)  ##FIXME really Whalf or W?
+    YLX<-as.matrix(solve(YL,X))
     XVXinv<- solve(crossprod(X, YLX))
-    XVS <-as.matrix(YLX)*as.vector(y-X%*%beta)
+    XVS <- YLX*as.vector(y-X%*%beta)
     
     Vbeta<-XVXinv%*%crossprod(rowsum(XVS, design$cluster[,1]))%*%XVXinv
     
@@ -119,6 +119,7 @@ pls <- function(X,y,Zt,Lambdat,thfun,aweights,
     
     WX <- Whalf %*% X
     Wy <- Whalf %*% y
+    W_u <- Diagonal(x=(as.numeric(uweights)))
     ZtW <- Zt %*% Whalf
     XtWX <- crossprod(WX)
     XtWy <- crossprod(WX, Wy)
@@ -130,21 +131,21 @@ pls <- function(X,y,Zt,Lambdat,thfun,aweights,
         beta <- numeric(p)              # conditional estimate of fixed-effects
         cu <- numeric(q)                # intermediate solution
         DD <- XtWX                      # down-dated XtWX
-        L <- Cholesky(tcrossprod(Lambdat %*% ZtW)+Wuhalf, LDL = FALSE)
+        L <- Cholesky(tcrossprod(Lambdat %*% ZtW)+W_u, LDL = FALSE)
         Lambdat <- Lambdat              # stored here b/c x slot will be updated
         mu <- numeric(n)                # conditional mean of response
         RZX <- matrix(0,nrow=q,ncol=p)  # intermediate matrix in solution
         u <- numeric(q)                 # conditional mode of spherical random effects
         s2hat <- numeric(1)
 
-        Whalf <- Diagonal(x=sqrt(as.numeric(yweights)))%*%Wahalf
+        W_y<- Diagonal(x=(as.numeric(yweights)*as.numeric(aweights)))
         WX <- Whalf %*% X               #used in sandwich estimator
         Wy <- Whalf %*% y
         ZtW <- Zt %*% Whalf
 
         function(theta) {
             Lambdat@x[] <<- thfun(theta)
-            L <<- Cholesky(tcrossprod(Lambdat %*% ZtW)+Wuhalf, LDL = FALSE)
+            L <<- Cholesky(tcrossprod(Lambdat %*% ZtW)+W_u, LDL = FALSE)
                                         # solve eqn. 30
             cu[] <<- as.vector(solve(L, solve(L, Lambdat %*% ZtWy, system="P"),
                                      system="L"))

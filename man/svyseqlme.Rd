@@ -1,5 +1,6 @@
 \name{svyseqlme}
 \alias{svyseqlme}
+\alias{coef.svyseqlme}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Linear mixed models by sequential pseudolikelihood
@@ -11,6 +12,7 @@ Sequential pseudolikelihood is my name for the estimation approach introduced by
 \usage{
 svyseqlme(formula, design, REML = FALSE,
 scale = c("sample_size", "effective_sample_size", "gk", "raw"))
+\method{coef}{svy2lme}(object,...,random=FALSE)
     }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -24,8 +26,10 @@ A survey design object produced by \code{survey::svydesign}, containing weights 
 Should (weighted pseudo)\code{REML} estimation be used instead of (weighted pseudo) likelihood?
 }
 \item{scale}{How to scale weights}
+ \item{\dots}{for method compatibility}
+    \item{random}{if \code{TRUE}, the variance components rather than
+    the fixed effects}
 }
-
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
