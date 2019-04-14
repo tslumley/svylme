@@ -7,27 +7,11 @@
 ## uweights: sampling weights for the unit-variance random effects
 ##
 ## Only usable when there is a well-defined sampling weight for each u,
-## ie, nested case. 
+## ie, nested case.
+##
+## currently only for the two-stage case:
+##    multistage needs better bookkeeping to match u to uweights
 
-## library(lme4pureR)
-## library(lme4)
-## library(minqa)
-## set.seed(1)
-## n <- 1000
-## x <- rnorm(n)
-## z <- rnorm(n)
-## X <- cbind(1, x)
-## ZZ <- cbind(1, z)
-## grp <- gl(n/5,5)
-## RE <- mkRanefStructures(list(grp), list(ZZ))
-## Z <- t(RE$Zt)
-## y <- as.numeric(X%*%rnorm(ncol(X)) + Z%*%rnorm(ncol(Z)) + rnorm(n))
-## m <- lmer.fit(y,X,ZZ,grp)
-## m$par
-## Lambdat <- RE$Lambdat
-## Lambdat@x <- m$par[RE$Lind]
-## cov2cor(crossprod(Lambdat)[1:2,1:2])
-## lmer(y ~ x + (z|grp))
 
 scale_weights<-function(design, method){
     m<-NCOL(design$allprob)
@@ -86,7 +70,6 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
                     lower = m0@lower, upper = Inf)
 
     ## sandwich estimator
-    ## FIXME is wrong
     p<-NCOL(X)
     beta <-environment(devfun)$beta
     Lambdat<-environment(devfun)$Lambdat
