@@ -172,7 +172,7 @@ pls <- function(X,y,Zt,Lambdat,thfun,aweights,
             pwrss <- sum(wtres^2) + sum((Wuhalf*u)^2) # penalized, weighted residual sum-of-squares
             fn <- as.numeric(length(mu))
             Nhat <- sum(yweights)
-            s2hat <<- sum(wtres^2)/Nhat
+            s2hat <<- sum(pwrss)/Nhat
             ld <- 2*determinant(L,logarithm=TRUE)$modulus # log determinant
             if (REML) {
                 ld <- ld + determinant(DD,logarithm=TRUE)$modulus
