@@ -6,7 +6,7 @@
 Linear mixed models by sequential pseudolikelihood
 }
 \description{
-Sequential pseudolikelihood is my name for the estimation approach introduced by Pfeffermann et al (1998) and expanded in a sequence of papers by Rabe-Hesketh and Skrondal. It is the procedure behind complex-survey estimation in the \code{gllamm} package of Stata code. The construction here is slightly different from that of the previous authors, since it is based on the penalised least squares computations behind the \code{lme4} package, and the results are not the same as the Stata implementation. 
+Sequential pseudolikelihood is my name for the estimation approach introduced by Pfeffermann et al (1998) and expanded in a sequence of papers by Rabe-Hesketh and Skrondal. It is the procedure behind complex-survey estimation in the \code{gllamm} package of Stata code. The construction here is slightly different from that of the previous authors, since it is based on the penalised least squares computations behind the \code{lme4} package, but the results are the same for linear mixed models in designs without strata. 
 
 }
 \usage{
@@ -48,17 +48,42 @@ Rabe-Hesketh, S. and Skrondal, A. (2006). Multilevel modeling of complex survey 
 \code{\link{svy2lme}} for pairwise  pseudolikelihood modelleing
 }
 \examples{
-data(nzmaths)
-des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
-	weights=~W_FSCHWT+condwt, data=nzmaths)
 
-m2<-svyseqlme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
-	design=des,scale="raw")
-m2
+## simulated example
+## 
+set.seed(2000-2-29)
 
-m3<-svyseqlme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, 
-	design=des,scale="sample_size")
-m3
+df<-data.frame(x=rnorm(1000*20),g=rep(1:1000,each=20), t=rep(1:20,1000), id=1:20000)
+df$u<-with(df, rnorm(1000)[g])
+
+df$y<-with(df, x+u+rnorm(1000,s=2))
+
+## oversample extreme `u` to bias random-intercept variance
+pg<-exp(abs(df$u/2)-2.2)[df$t==1]
+
+in1<-rbinom(1000,1,pg)==1
+in2<-rep(1:5, length(in1))
+
+sdf<-subset(df, (g %in% (1:1000)[in1]) & (t %in% in2))
+
+p1<-rep(pg[in1],each=5)
+N2<-rep(20,nrow(sdf))
+
+sdf$w1<-1/p1
+sdf$w2<-20/5
+
+design<-survey::svydesign(id=~g+id, data=sdf, weights=~w1+w2)
+svyseqlme(y~x+(1|g),design=design)
+
+## from Stata
+##            Variance  (sqrt() this for comparison)
+## (Intercept)   1.034899
+## Residual:	 3.728113
+##                beta     SE       t     p
+## (Intercept) -0.0756 0.0988 -0.7655 0.444
+## x            1.0470 0.0795 13.1722 0.000
+
+
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

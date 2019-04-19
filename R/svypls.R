@@ -61,7 +61,8 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
     scaling_method <- match.arg(scale)
     clweights<-scale_weights(design, method=scaling_method)
     uweights<-rep(clweights[[1]], each=length(m0@cnms[[1]]))  #FIXME only for two-stage
-
+    
+    
     devfun <- pls(X,y,Zt,Lambdat,
             thfun = thfun,
             aweights = rep(1,n), offset = offset,
@@ -73,19 +74,10 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
     warning("Sandwich variance estimator may still contain nuts")
     p<-NCOL(X)
     beta <-environment(devfun)$beta
-    Lambdat<-environment(devfun)$Lambdat
-    ##ZtW<-environment(devfun)$ZtW
-    WZt<-sqrt(uweights)*Zt
-    W_y<-environment(devfun)$W_y
-    ##YL <- Cholesky(crossprod(Lambdat %*% ZtW)+W_y, LDL = FALSE)  ##FIXME really Whalf or W?
-    YL <- Cholesky(crossprod(Lambdat %*% WZt)+W_y, LDL = FALSE)  ##FIXME really Whalf or W?
-    YLX<-as.matrix(solve(YL,X))
-    XVXinv<- solve(crossprod(X, YLX))
-    XVS <- YLX*as.vector(y-X%*%beta)
-    
-    ##Vbeta<-XVXinv%*%crossprod(rowsum(XVS, design$cluster[,1]))%*%XVXinv
-    inffun<-XVS%*%XVXinv
-    Vbeta<-vcov(svytotal(inffun/yweights, design))
+    b<-environment(devfun)$b
+    DD<-environment(devfun)$DD
+    scores<-(X*as.vector(y-X%*%beta-crossprod(Zt,b)))%*%solve(DD)
+    Vbeta<-vcov(svytotal(scores,design))
 
     ## put variance parameters in printable form
     qi<-sapply(m0@cnms,length)
