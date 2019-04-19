@@ -48,7 +48,6 @@ Rabe-Hesketh, S. and Skrondal, A. (2006). Multilevel modeling of complex survey 
 \code{\link{svy2lme}} for pairwise  pseudolikelihood modelleing
 }
 \examples{
-
 ## simulated example
 ## 
 set.seed(2000-2-29)
@@ -61,10 +60,10 @@ df$y<-with(df, x+u+rnorm(1000,s=2))
 ## oversample extreme `u` to bias random-intercept variance
 pg<-exp(abs(df$u/2)-2.2)[df$t==1]
 
-in1<-rbinom(1000,1,pg)==1
+in1<-rbinom(1000,1,pg)==1	
 in2<-rep(1:5, length(in1))
 
-sdf<-subset(df, (g %in% (1:1000)[in1]) & (t %in% in2))
+sdf<-subset(df, (g \%in\% (1:1000)[in1]) & (t \%in\% in2))
 
 p1<-rep(pg[in1],each=5)
 N2<-rep(20,nrow(sdf))
