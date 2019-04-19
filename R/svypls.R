@@ -71,7 +71,6 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
                     lower = m0@lower, upper = Inf)
 
     ## sandwich estimator
-    warning("Sandwich variance estimator may still contain nuts")
     p<-NCOL(X)
     beta <-environment(devfun)$beta
     b<-environment(devfun)$b
