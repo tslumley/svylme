@@ -170,7 +170,7 @@ pls <- function(X,y,Zt,Lambdat,thfun,aweights,
                 fn <- fn - length(beta)
             }
             attributes(ld) <- NULL
-                                        # profiled deviance or REML criterion
+            ## profiled deviance or REML criterion
             ld + fn*(1 + log(2*pi*pwrss) - log(Nhat))-determinant(Wuhalf,logarithm=TRUE)$modulus
             #ld + fn*(1 + log(2*pi*pwrss))
         }
@@ -182,8 +182,8 @@ pls <- function(X,y,Zt,Lambdat,thfun,aweights,
  
 print.svyseqlme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     cat("Linear mixed model fitted by sequential pseudolikelihood\n")
-    cat("Formula: ")
-    cat(paste(deparse(x$call$formula),collapse="\n"))
+    cat("Call: ")
+    cat(paste(deparse(x$call),collapse="\n"))
     cat("\nRandom effects:\n")
     theta<-x$varcomp$par
     s<-sqrt(as.vector(x$s2))
@@ -204,9 +204,9 @@ print.svyseqlme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
 
 coef.svyseqlme<-function(object,...,random=FALSE){
     if (random) {
-        VC<-x$VC
+        VC<-object$VC
         s2<-drop(object$s2)
-        dimnames(L)<-list(object$znames,object$znames)
+        dimnames(VC)<-list(object$znames,object$znames)
         list(s2=s2, varb=VC*s2)
     } else 
         drop(object$beta)

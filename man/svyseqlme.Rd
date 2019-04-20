@@ -27,7 +27,7 @@ Should (weighted pseudo)\code{REML} estimation be used instead of (weighted pseu
 }
 \item{scale}{How to scale weights}
  \item{\dots}{for method compatibility}
-    \item{random}{if \code{TRUE}, the variance components rather than
+    \item{random}{if \code{TRUE}, the variance components as well as 
     the fixed effects}
 }
 \details{
