@@ -34,12 +34,21 @@ scale_weights<-function(design, method){
             w[[i]]<-(wi[,i]*Ns/ns)[!duplicated(design$cluster[,i])]
          }
         w
-    }
-    else stop("not implemented yet")
+    } else if(method=="effective_sample_size"){ ##FIXME check
+        w<-vector("list",m-1)
+        wi<-t(apply(1/design$allprob,1, cumprod))
+         for(i in seq_len(m-1)){
+            ns<-design$fpc$sampsize[,i+1]
+            Swsq<-ave(1/design$allprob[,i+1], design$cluster[,i], FUN=sum)
+            Sws<-ave(1/design$allprob[,i+1], design$cluster[,i], FUN=sum)
+            w[[i]]<-(wi[,i]*Swsq/Sws)[!duplicated(design$cluster[,i])]
+         }
+        w
+    } else stop("not implemented yet")
 }
 
 
-svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effective_sample_size","gk","raw")){
+svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effective_sample_size","raw")){
     data<-model.frame(design)
     m0 <-lme4::lmer(formula, data, REML=REML)
    
