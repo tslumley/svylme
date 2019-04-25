@@ -1,10 +1,10 @@
 Package: svylme
 Title: Linear Mixed Models for Complex Survey Data
-Version: 0.6
+Version: 0.7
 Author: Thomas Lumley, Steve Walker, Doug Bates
 Description: Linear mixed models for complex survey data. 
 Imports: minqa, Matrix,lme4, methods, utils, stats
 Depends: survey
-License: GPL-3
+License: GPL-2
 Maintainer: Thomas Lumley <t.lumley@auckland.ac.nz>
 

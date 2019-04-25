@@ -1,3 +1,5 @@
+0.7    	Experimental version for multistage designs, multilevel models
+
 0.6     svyseqlme() is now correct for two-stage designs and two-level models.
 
 0.5     add initial version of sequential pseudolikelihood
