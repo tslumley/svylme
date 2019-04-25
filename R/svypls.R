@@ -87,12 +87,9 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
     ## because if it isn't, the lmer() call won't have converged.
 
     if (any(is.na(unlist(u_depth)))){
+        print(u_depth)
         stop("Model clusters not nested in sampling units")
         }
-
-    ##if(any(unlist(u_depth) < design_depth-1))
-    ##    stop("Can't currently handle random effects except at second-last stage")
-    
 
     yweights<-weights(design,"sampling")
 
