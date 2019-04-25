@@ -6,8 +6,7 @@
 Linear mixed models by sequential pseudolikelihood
 }
 \description{
-Sequential pseudolikelihood is my name for the estimation approach introduced by Pfeffermann et al (1998) and expanded in a sequence of papers by Rabe-Hesketh and Skrondal. It is the procedure behind complex-survey estimation in the \code{gllamm} package of Stata code. The construction here is slightly different from that of the previous authors, since it is based on the penalised least squares computations behind the \code{lme4} package, but the results are the same for linear mixed models in designs without strata. 
-
+Fits a linear mixed model by penalised least squares (as in the \code{lme4} package), but weighting each random effect and the residual by the appropriate design weights for the sampling stage where they appear. 
 }
 \usage{
 svyseqlme(formula, design, REML = FALSE,
@@ -25,13 +24,13 @@ A survey design object produced by \code{survey::svydesign}, containing weights 
   \item{REML}{
 Should (weighted pseudo)\code{REML} estimation be used instead of (weighted pseudo) likelihood?
 }
-\item{scale}{How to scale weights}
+\item{scale}{How to rescale weights. The default is recommended.}
  \item{\dots}{for method compatibility}
     \item{random}{if \code{TRUE}, the variance components as well as 
     the fixed effects}
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+Sequential pseudolikelihood is my name for the estimation approach introduced by Pfeffermann et al (1998) and expanded in a sequence of papers by Rabe-Hesketh and Skrondal. It is the procedure behind complex-survey estimation in the \code{gllamm} package of Stata code. The construction here is slightly different from that of the previous authors, since it is based on the penalised least squares computations behind the \code{lme4} package. The results are identical in a few cases; one is shown in the example below. 
 }
 \value{
 Object of class \code{svyseqlme}
@@ -40,6 +39,11 @@ Object of class \code{svyseqlme}
 Pfeffermann, D., Skinner, C. J., Holmes, D. J., Goldstein, H., & Rasbash, J. (1998). Weighting for unequal selection probabilities in multilevel models. Journal of the Royal Statistical Society: series B (statistical methodology), 60(1), 23-40.
 
 Rabe-Hesketh, S. and Skrondal, A. (2006). Multilevel modeling of complex survey data. Journal of the Royal Statistical Society, Series A 169 (4), 805-827
+
+Douglas Bates, Martin Maechler, Ben Bolker, Steve Walker (2015).
+  Fitting Linear Mixed-Effects Models Using lme4. Journal of
+  Statistical Software, 67(1), 1-48. doi:10.18637/jss.v067.i01.
+
 }
 
 

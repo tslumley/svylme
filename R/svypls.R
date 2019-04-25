@@ -90,17 +90,20 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
         stop("Model clusters not nested in sampling units")
         }
 
-    if(any(unlist(u_depth) < design_depth-1))
-        stop("Can't currently handle random effects except at second-last stage")
+    ##if(any(unlist(u_depth) < design_depth-1))
+    ##    stop("Can't currently handle random effects except at second-last stage")
     
 
     yweights<-weights(design,"sampling")
 
     scaling_method <- match.arg(scale)
     clweights<-scale_weights(design, method=scaling_method)
-    ## only for two-stage
-    idx<-match(rownames(Zt), unique(m0@flist[[1]]))        # So u is sorted. Of *course* it is.
-    uweights<-clweights[[1]][idx]
+    uweights<-numeric(NROW(Zt))
+    nstages<-length(m0@flist)
+    for(i in 1:nstages){
+        idx<-match(rownames(Zt), unique(m0@flist[[nstages-i+1]]))
+        uweights[!is.na(idx)]<-clweights[[i]][na.omit(idx)]
+    }
     ###
     
     devfun <- pls(X,y,Zt,Lambdat,
@@ -130,9 +133,12 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
 
     names(beta)<-colnames(X)
     dimnames(Vbeta)<-list(colnames(X),colnames(X))
+
+    znames<-unlist(m0@cnms)
+    names(znames)<-rep(names(m0@cnms),sapply(m0@cnms,length))
     
     rval<-list(devfun=devfun, varcomp=varcomp, beta=beta, call=sys.call(),
-               s2=environment(devfun)$s2hat, znames=m0@cnms[[1]], Vbeta=Vbeta,
+               s2=environment(devfun)$s2hat, znames=znames, Vbeta=Vbeta,
                VC=VC)
     class(rval)<-"svyseqlme"
     rval
@@ -227,11 +233,11 @@ print.svyseqlme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     cat("\nRandom effects:\n")
     theta<-x$varcomp$par
     s<-sqrt(as.vector(x$s2))
-    stdev<- matrix(s*sqrt(diag(x$VC)),ncol=1)
-    rownames(stdev)<-x$znames
+    stdev<- rbind(matrix(s*sqrt(diag(x$VC)),ncol=1),round(s, digits))
+    rownames(stdev)<-c(paste(names(x$znames),x$znames), "Residual:")
     colnames(stdev)<-"Std.Dev."
-    print(round(stdev,digits))
-    cat("Residual:\t",round(s,digits))
+    print(round(stdev, digits))
+
     cat("\n Fixed effects:\n")
     coef<- cbind(beta=x$beta,SE=sqrt(diag(x$Vbeta)),t=x$beta/sqrt(diag(x$Vbeta)))
     coef<-cbind(coef,p=2*pnorm(-abs(coef[,3])))
