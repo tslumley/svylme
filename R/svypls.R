@@ -65,6 +65,35 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
     offset<-m0@resp$offset
     n<-length(y)
 
+    ## check nesting
+    model_clusters <- m0@flist
+    is.nested<-function(fine, coarse){
+        if(!(length(fine)==length(coarse)))
+            stop("vectors must be the same length")
+        length(unique(fine)) == length(unique(paste(fine,coarse,sep=":")))
+    }
+    last.nested<-function(g){
+        a<-which(apply(design$cluster, 2, is.nested, fine=g))
+        if (length(a))
+            max(a)
+        else
+            NA
+        }
+    u_depth<-lapply(model_clusters, last.nested)
+    design_depth<-NCOL(design$cluster)
+
+    ## Don't need to worry about whether u_depth==design_depth is ok
+    ## (is ok if whole-cluster sampling, not if element sampling)
+    ## because if it isn't, the lmer() call won't have converged.
+
+    if (any(is.na(unlist(u_depth)))){
+        stop("Model clusters not nested in sampling units")
+        }
+
+    if(any(unlist(u_depth) < design_depth-1))
+        stop("Can't currently handle random effects except at second-last stage")
+    
+    
     yweights<-weights(design,"sampling")
 
     scaling_method <- match.arg(scale)
