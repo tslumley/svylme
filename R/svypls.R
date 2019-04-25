@@ -93,13 +93,15 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
     if(any(unlist(u_depth) < design_depth-1))
         stop("Can't currently handle random effects except at second-last stage")
     
-    
+
     yweights<-weights(design,"sampling")
 
     scaling_method <- match.arg(scale)
     clweights<-scale_weights(design, method=scaling_method)
-    uweights<-rep(clweights[[1]], each=length(m0@cnms[[1]]))  #FIXME only for two-stage
-    
+    ## only for two-stage
+    idx<-match(rownames(Zt), unique(m0@flist[[1]]))        # So u is sorted. Of *course* it is.
+    uweights<-clweights[[1]][idx]
+    ###
     
     devfun <- pls(X,y,Zt,Lambdat,
             thfun = thfun,
