@@ -99,10 +99,10 @@ svyseqlme<-function(formula, design, REML=FALSE, scale=c("sample_size","effectiv
     scaling_method <- match.arg(scale)
     clweights<-scale_weights(design, method=scaling_method)
     uweights<-numeric(NROW(Zt))
-    nstages<-length(m0@flist)
-    for(i in 1:nstages){
-        idx<-match(rownames(Zt), unique(m0@flist[[nstages-i+1]]))
-        uweights[!is.na(idx)]<-clweights[[i]][na.omit(idx)]
+    nlevels<-length(m0@flist)
+    for(i in 1:nlevels){
+        idx<-match(rownames(Zt), unique(m0@flist[[i]]))
+        uweights[!is.na(idx)]<-clweights[[ u_depth[[i]] ]][na.omit(idx)]
     }
     ###
     
