@@ -9,9 +9,6 @@
 ## Only usable when there is a well-defined sampling weight for each u,
 ## ie, nested case.
 ##
-## currently only for the two-stage case:
-##    multistage needs better bookkeeping to match u to uweights
-
 
 scale_weights<-function(design, method){
     m<-NCOL(design$allprob)
