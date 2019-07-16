@@ -26,7 +26,7 @@ getallpairs<-function(gps, TOOBIG=1000){
 }
 
 
-svy2lmeNG<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
+svy2lmeNG<-function(formula,design,sterr=TRUE, return.devfun=FALSE,pop.var=FALSE){
 
     data<-model.frame(design)
     
@@ -66,7 +66,9 @@ svy2lmeNG<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
         npos<-npos+qi*n1i
     }
     
-
+    ## need PSUs as well as clusters now
+    psu<-design$cluster[[1]]
+    
 
     ## all pairs within same cluster
     ## Conceptually, the union of 
@@ -91,17 +93,6 @@ svy2lmeNG<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
     pwts<-1/allpwts$full
     pwt2<-1/allpwts$cond
     p1<-allpwts$first
-    
-    ## if (is.null(N2)){
-    ##     ## using probabilities
-    ##     pwt2 <- (1/p2[ii])*(1/p2[jj])
-    ##     pwts<- (1/p1[ii])*pwt2  ## with replacement at stage 2
-    ## } else {
-    ##     ## using cluster size
-    ##     n2<-ave(as.numeric(g), g, FUN=length)
-    ##     pwt2<-N2[ii]*(N2[jj]-1)/(n2[ii]*(n2[ii]-1))
-    ##     pwts<-(1/p1[ii])*pwt2  ## SRS without replacement at stage 2
-    ## }
 
     ## variance matrix of random effects
     qi<-sapply(m0@cnms,length)
@@ -201,26 +192,44 @@ svy2lmeNG<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
             Xii*pwt2*(inv12*r2)+
             Xjj*pwt2*(inv12*r1)
 
-        ## cluster weights
-        ##FIXME
-        p1g<-p1[!duplicated(g[ii])]
-
+       
+        ## The grouping variables here are PSUs, not clusters
+        pw1<-1/p1
+        
         if (is.null(design)){
           stop("standard errors need a design argument")
         } 
-        inffun<-(1/p1g)*rowsum(xwr,g[ii],reorder=FALSE)%*%solve(xtwx)
-        PSUg<-design$cluster[,1][ii[!duplicated(g[ii])]]
+        inffun<-rowsum( (xwr*pw1[ii])%*%solve(xtwx), psu[ii], reorder=FALSE)
         
-        inffun<-rowsum(inffun, PSUg,reorder=FALSE)
-        stratPSU<-design$strata[,1][ii[!duplicated(design$cluster[,1][ii])]] ##FIXME to allow single-PSU strata?
+        stratPSU<-design$strata[,1][ii[!duplicated(psu[ii])]] ##FIXME to allow single-PSU strata?
         
         one<-rep(1,NROW(inffun))
         ni<-ave(one,stratPSU,FUN=NROW)
         centering<-apply(inffun,2,function(x) ave(x, stratPSU, FUN=mean))
         centered<- inffun-centering
         phase2 <- crossprod(centered*sqrt(ni/ifelse(ni==1,1,(ni-1))))
-        phase1 <- solve(xtwx)*s2
-        phase1+phase2
+
+        if (pop.var=="Fisher"){
+            stop("Not implemented")
+            ## Population Fisher information
+            VarY <-(diag(NROW(Z))+tcrossprod( Z, Z%*%L))
+            PW<-matrix(nrow=NROW(VarY),ncol=NCOL(VarY))
+            PW[ii,jj]<-pwt
+            wVar<-VarY*PW
+            phase1<- drop(s2)* solve(crossprod(X, solve(wVar,X)))
+            V<-phase1+phase2
+            attr(V,"phases")<-list(phase1=phase1, phase2=phase2)
+        } else if (pop.var=="Godambe") {
+            stop("Not implemented")
+            phase1G <- solve(xtwx)*drop(s2)
+            ##phase1H:  X^TW VarY W X
+            V<-phase1+phase2
+            attr(V,"phases")<-list(phase1=phase1, phase2=phase2)
+        } else {
+            V<-phase2
+            attr(V,"phases")<-list(phase1=phase2*0, phase2=phase2)
+        }
+        V
     }
     
     
