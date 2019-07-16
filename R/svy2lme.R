@@ -1,12 +1,22 @@
 
+boot2lme<-function(model, rdesign, verbose=FALSE){
 
-boot2lme<-function(model,rdesign,  verbose=FALSE){
+    naa<-environment(model$devfun)$naa
+    if (!is.null(naa)){
+        if (length(environment(model$devfun)$y)+length(naa) == NROW(rdesign))
+            rdesign<-rdesign[-naa,,drop=FALSE]
+        if(verbose) warning(paste(length(naa),"observations dropped because of missing values"))
+        }
+    if (length(environment(model$devfun)$y) != NROW(rdesign)){
+        stop("number of rows of design does not match model")
+    }
 
     basewts<-weights(rdesign, "sampling")
     replicates<-weights(rdesign, "analysis")
     scale<-rdesign$scale
     rscales<-rdesign$rscales
-    
+
+     
     nrep<-ncol(replicates)
     pwt0<-get("pwts",environment(model$devfun))
     if (is.null(rscales)) rscales<-rep(1,nrep)
@@ -46,7 +56,7 @@ boot2lme<-function(model,rdesign,  verbose=FALSE){
 }
 
 print.boot2lme<-function(x,...){
-    cat("boot2lme:",length(x$s2star),"replicates from", deparse(x$formula))
+    cat("boot2lme:",length(x$s2),"replicates from", deparse(x$formula))
     invisible(x)
 }
 
