@@ -376,6 +376,9 @@ svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
             Xii*pwt2*(inv12*r2)+
             Xjj*pwt2*(inv12*r1)
 
+        ## There could be multiple clusters in the same PSU
+        ## Sum the cluster influcence functions over PSU, then crossprod
+        
         ## cluster weights
         p1g<-p1[!duplicated(g[ii])]
 
