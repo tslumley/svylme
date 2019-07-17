@@ -448,7 +448,7 @@ print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     coef<- cbind(beta=x$beta,SE=sqrt(diag(x$Vbeta)),t=x$beta/sqrt(diag(x$Vbeta)))
     coef<-cbind(coef,p=2*pnorm(-abs(coef[,3])))
     colnames(coef)<-c("beta","SE","t","p")
-    print(round(coef,digits))
+    printCoefmat(coef,digits=digits,P.values=TRUE,has.Pvalue=TRUE, signif.stars=FALSE)
     cat("\n")
     invisible(x)
     }
