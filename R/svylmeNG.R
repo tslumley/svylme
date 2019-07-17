@@ -210,12 +210,11 @@ svy2lmeNG<-function(formula, design, sterr=TRUE, return.devfun=FALSE, pop.var=FA
         phase2 <- crossprod(centered*sqrt(ni/ifelse(ni==1,1,(ni-1))))
 
         if (pop.var=="Fisher"){
-            stop("Not implemented")
             ## Using estimated population Fisher information
             ## Should do ok: pairwise likelihood seems to be pretty efficient for beta
             fakelme<-lme4::lmer(formula, data=data,
                                 devFunOnly=TRUE, REML=FALSE,
-                                start=theta,weights=weights(design,"sampling"))
+                                start=theta, weights=weights(design,"sampling"))
             phase1 <-environment(fakelme)$pp$unsc()*drop(s2)
             V<-phase1+phase2
             attr(V,"phases")<-list(phase1=phase1, phase2=phase2)
