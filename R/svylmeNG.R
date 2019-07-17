@@ -26,7 +26,7 @@ getallpairs<-function(gps, TOOBIG=1000){
 }
 
 
-svy2lmeNG<-function(formula,design,sterr=TRUE, return.devfun=FALSE,pop.var=FALSE){
+svy2lmeNG<-function(formula, design, sterr=TRUE, return.devfun=FALSE, pop.var=FALSE){
 
     data<-model.frame(design)
     
@@ -211,18 +211,19 @@ svy2lmeNG<-function(formula,design,sterr=TRUE, return.devfun=FALSE,pop.var=FALSE
 
         if (pop.var=="Fisher"){
             stop("Not implemented")
-            ## Population Fisher information
-            VarY <-(diag(NROW(Z))+tcrossprod( Z, Z%*%L))
-            PW<-matrix(nrow=NROW(VarY),ncol=NCOL(VarY))
-            PW[ii,jj]<-pwt
-            wVar<-VarY*PW
-            phase1<- drop(s2)* solve(crossprod(X, solve(wVar,X)))
+            ## Using estimated population Fisher information
+            ## Should do ok: pairwise likelihood seems to be pretty efficient for beta
+            fakelme<-lme4::lmer(formula, data=data,
+                                devFunOnly=TRUE, REML=FALSE,
+                                start=theta,weights=weights(design,"sampling"))
+            phase1 <-environment(fakelme)$pp$unsc()*drop(s2)
             V<-phase1+phase2
             attr(V,"phases")<-list(phase1=phase1, phase2=phase2)
         } else if (pop.var=="Godambe") {
             stop("Not implemented")
             phase1G <- solve(xtwx)*drop(s2)
-            ##phase1H:  X^TW VarY W X
+            ## This is going to be hard
+            ## phase1H:  X^TW VarY W X
             V<-phase1+phase2
             attr(V,"phases")<-list(phase1=phase1, phase2=phase2)
         } else {
