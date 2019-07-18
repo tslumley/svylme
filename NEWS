@@ -1,3 +1,5 @@
+0.9	version to go with paper on pairwise composite likelihood vs sequential pseudolikelihood
+
 0.4	get pairwise weights from the survey design object
 
         Fix for multiple random terms -- restructuring of Z was wrong
