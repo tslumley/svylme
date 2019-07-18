@@ -1,8 +1,8 @@
 Package: svylme
 Title: Linear Mixed Models for Complex Survey Data
-Version: 0.4
+Version: 1.1
 Author: Thomas Lumley
-Description: Linear mixed models for complex survey data, by pairwise composite likelihood. Currently only handles two-level models for the last two stages of a multistage design.
+Description: Linear mixed models for complex survey data, by pairwise composite likelihood.
 Imports: minqa, Matrix,lme4, methods, utils, stats
 Depends: survey
 License: GPL-3
