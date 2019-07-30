@@ -196,7 +196,7 @@ getpairs<-function(gp, TOOBIG=1000){
     data.frame(i=i[i<j],j=j[i<j])
     }
 
-svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
+svy2lme_nested<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
 
     data<-model.frame(design)
     
@@ -377,7 +377,7 @@ svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
             Xjj*pwt2*(inv12*r1)
 
         ## There could be multiple clusters in the same PSU
-        ## Sum the cluster influcence functions over PSU, then crossprod
+        ## Sum the cluster influence functions over PSU, then crossprod
         
         ## cluster weights
         p1g<-p1[!duplicated(g[ii])]
@@ -391,13 +391,13 @@ svy2lme<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
             inffun<-(1/p1g)*rowsum(xwr,g[ii],reorder=FALSE)%*%solve(xtwx)
             PSUg<-design$cluster[,1][ii[!duplicated(g[ii])]]
             
-            inffun<-rowsum(inffun, PSUg,reorder=FALSE)
+            inffunS<-rowsum(inffun, PSUg,reorder=FALSE)
             stratPSU<-design$strata[,1][ii[!duplicated(design$cluster[,1][ii])]] ##FIXME to allow single-PSU strata?
 
-            one<-rep(1,NROW(inffun))
+            one<-rep(1,NROW(inffunS))
             ni<-ave(one,stratPSU,FUN=NROW)
-            centering<-apply(inffun,2,function(x) ave(x, stratPSU, FUN=mean))
-            centered<- inffun-centering
+            centering<-apply(inffunS,2,function(x) ave(x, stratPSU, FUN=mean))
+            centered<- inffunS-centering
             crossprod(centered*sqrt(ni/ifelse(ni==1,1,(ni-1))))
         }
     }

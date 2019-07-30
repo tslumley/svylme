@@ -26,8 +26,12 @@ getallpairs<-function(gps, TOOBIG=1000){
 }
 
 
-svy2lmeNG<-function(formula, design, sterr=TRUE, return.devfun=FALSE, pop.var=FALSE){
+svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("general","nested")){
 
+    method<-match.arg(method)
+    if(method=="nested"){
+       return(svy2lme_nested(formula,design, sterr=sterr, return.devfun=return.devfun))
+    }
     data<-model.frame(design)
     
     ## Use unweighted model to get starting values and set up variables
@@ -198,8 +202,8 @@ svy2lmeNG<-function(formula, design, sterr=TRUE, return.devfun=FALSE, pop.var=FA
         
         if (is.null(design)){
           stop("standard errors need a design argument")
-        } 
-        inffun<-rowsum( (xwr*pw1[ii])%*%solve(xtwx), psu[ii], reorder=FALSE)
+        }
+        inffun<-rowsum( (xwr*pw1)%*%solve(xtwx), psu[ii], reorder=FALSE)
         
         stratPSU<-design$strata[,1][ii[!duplicated(psu[ii])]] ##FIXME to allow single-PSU strata?
         

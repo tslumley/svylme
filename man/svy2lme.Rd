@@ -7,13 +7,12 @@
 Linear mixed models by pairwise likelihood
 }
 \description{
-Fits linear mixed models by profile pairwise composite likelihood. At
-the moment, it can only handle two-level models, where the model
-clusters are the same as the sampling clusters at the second-last stage
-of sampling. 
+Fits linear mixed models by profile pairwise composite
+likelihood. Currently allows two-level models, but these may contain
+crossed random effects and the model clusters need not be the sampling units.
 }
 \usage{
-svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE)
+svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE, method=c("general","nested"))
 \method{coef}{svy2lme}(object,...,random=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -35,6 +34,8 @@ svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE)
   \item{return.devfun}{If \code{TRUE}, return the deviance function as a
     component of the object. This will increase the memory use
     substantially, but allows for bootstrapping}
+  \item{method}{\code{"nested"} requires the model clusters to be nested
+    in the design sampling units. It's faster and better tested}
   \item{object}{\code{svy2lme} object}
   \item{\dots}{for method compatibility}
     \item{random}{if \code{TRUE}, the variance components rather than
@@ -82,7 +83,7 @@ svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE)
     in the stratum, and then added up across strata. When the sampling
     and model structure are the same, this is the estimator of Yi et al,
     but it also allows for there to be sampling stages before the stages
-    that are modelled.
+    that are modelled, and for the model and sampling structures to be different.
   
 }
 \value{
@@ -114,6 +115,7 @@ dclus2<-svydesign(id=~dnum+snum, fpc=~fpc1+fpc2, data=apiclus2)
 
 svy2lme(api00~(1|dnum)+ell+mobility+api99, design=dclus1)
 svy2lme(api00~(1|dnum)+ell+mobility+api99, design=dclus2)
+svy2lme(api00~(1|dnum)+ell+mobility+api99, design=dclus2,method="nested")
 
 lme4::lmer(api00~(1|dnum)+ell+mobility+api99, data=apipop)
 
