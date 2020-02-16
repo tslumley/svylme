@@ -100,7 +100,7 @@ svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE, method=c("general","n
 \references{
   J.N.K. Rao, François Verret and Mike A. Hidiroglou "A weighted composite likelihood approach to inference for two-level models from survey data" Survey Methodology, December 2013  Vol. 39, No. 2, pp. 263-282
 
-  Grace Y. Yi , J. N. K. Rao and Haocheng Li "A WEIGHTED COMPOSITE LIKELIHOOD APPROACH FOR ANALYSIS OF SURVEY DATA UNDER TWO-LEVEL MODELS" Statistica Sinica Statistica Sinica
+  Grace Y. Yi , J. N. K. Rao and Haocheng Li "A WEIGHTED COMPOSITE LIKELIHOOD APPROACH FOR ANALYSIS OF SURVEY DATA UNDER TWO-LEVEL MODELS" Statistica Sinica 
   Vol. 26, No. 2 (April 2016), pp. 569-587
 }
 \author{
