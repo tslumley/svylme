@@ -28,7 +28,9 @@ svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE, method=c("general","n
   }
   \item{sterr}{
     Estimate standard errors for fixed effects? Set to \code{FALSE} for
-    greater speed when using resampling to get standard errors.
+    greater speed when using resampling to get standard errors. Also,
+    a PPS-without-replacement survey design can't get sandwich standard errors
+    (because fourth-order sampling probabilities would be needed) 
   }
 
   \item{return.devfun}{If \code{TRUE}, return the deviance function as a
@@ -61,8 +63,8 @@ svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE, method=c("general","n
     correlations of the random effects, since there is typically  no
     reason to assume these are zero. You can force two random effects to
     be independent by entering them in separate terms, eg
-    \code{(1|g)+(-1+x|g)} in the model formula asks for a random slope
-    and random intercept forced to be zero.
+    \code{(1|g)+(-1+x|g)} in the model formula asks for a random intercept
+    and a random slope with no random intercept, which will be uncorrelated.
     
     The internal parametrisation of the variance components uses the
     Cholesky decomposition of the relative variance matrix (the variance
