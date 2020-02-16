@@ -80,6 +80,23 @@ is_close<-function(a,b, tolerance=1e-5){
     }
 
 pi_from_design<-function(design, ii,jj){
+
+    if (design$pps && !is.null(design$dcheck)){
+        ## We have pairwise probabilities already. Or, at least, covariances
+        Deltacheck<-design$dcheck[ii,jj]
+        indep<-design$prob[ii]*design$prob[jj]
+        pi_ij<-(Deltacheck+1)*indep
+
+        last<-ncol(design$allprob)
+        n<-design$fpc$sampsize
+        N<-design$fpc$popsize
+
+        ## But sandwich standard errors would require fourth-order probabilities
+        return(list(full=pi_ij,
+                    first=NULL,
+                    cond=NULL))
+        }
+    
     if (NCOL(design$allprob)==1){
         ## No multistage weights
         if (NCOL(design$cluster)>1)

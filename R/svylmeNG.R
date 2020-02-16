@@ -95,9 +95,13 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ## second-order weights
     allpwts<-svylme:::pi_from_design(design,ii,jj)
     pwts<-1/allpwts$full
-    pwt2<-1/allpwts$cond
-    p1<-allpwts$first
-
+    if (sterr){
+        if (is.null(allpwts$cond))
+            stop("Can't get sandwich standard errors for this design")
+        pwt2<-1/allpwts$cond
+        p1<-allpwts$first
+    }
+    
     ## variance matrix of random effects
     qi<-sapply(m0@cnms,length)
     L<-as.matrix(Matrix::bdiag(lapply(qi,function(i) matrix(1,i,i))))
