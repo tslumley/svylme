@@ -77,7 +77,9 @@ vcov.boot2lme<-function(object, parameter=c("beta","theta","s2","relSD","SD","re
 
 is_close<-function(a,b, tolerance=1e-5){
     all(abs((as.matrix(a)-as.matrix(b))/(as.matrix(a)+as.matrix(b)))<tolerance)
-    }
+}
+
+"%//%"<-function(e1,e2) ifelse(e1==0,0, e1/e2)
 
 pi_from_design<-function(design, ii,jj){
 
@@ -113,7 +115,7 @@ pi_from_design<-function(design, ii,jj){
                 # srs, possibly stratified
                 n<-design$fpc$sampsize
                 N<-design$fpc$popsize
-                return(list(full= n[ii]*(n[jj]-1)/( N[ii]*(N[jj]-1)),
+                return(list(full= n[ii]*(n[jj]-1)%//%( N[ii]*(N[jj]-1)),
                             first=n[ii]/N[ii],
                             cond=rep(1,length(ii))))
             } else {
@@ -173,8 +175,7 @@ pi_from_design<-function(design, ii,jj){
         n<-design$fpc$sampsize
         N<-design$fpc$popsize
         samestrata<-(design$strata[ii, ]==design$strata[jj, ])
-        pstages <-(n[ii,]/N[ii,])*(samestrata*((n[jj,]-1)/(N[jj,]-1)) + (1-samestrata)*(n[jj,]/N[jj,]))
-        
+        pstages <-(n[ii,]/N[ii,])*(samestrata*((n[jj,]-1)%//%(N[jj,]-1)) + (1-samestrata)*(n[jj,]/N[jj,]))  ##FIXME divide by  zero when N==1
         return(list(full=apply((n[ii,]/N[ii,])[,-last,drop=FALSE],1,prod)*pstages[,last],
                     first=apply((n[ii,]/N[ii,])[,-last,drop=FALSE],1,prod),
                     cond=pstages[,last]))
