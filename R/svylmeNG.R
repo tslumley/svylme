@@ -104,7 +104,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     
     ## variance matrix of random effects
     qi<-sapply(m0@cnms,length)
-    L<-as.matrix(Matrix::bdiag(lapply(qi,function(i) matrix(1,i,i))))
+    L<-as.matrix(Matrix::bdiag(lapply(qi,function(i) matrix(1,i,i))))  ##FIXME: no, it's a lot more complicated
     ###(need indicator for where thetas go in the matrix)
     ThInd<-which((L==1) & lower.tri(L,diag=TRUE))
     

@@ -136,7 +136,7 @@ pi_from_design<-function(design, ii,jj){
                  return(list(full=design$prob[ii],
                              first=design$prob[ii],
                              cond=rep(1, length(ii))))
-            else if(is_close(as.vector(design$allprob),
+            else if(is_close(as.vector(design$allprob[[1]]),
                               as.vector(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
                 # srs, possibly stratified
                 n<-design$fpc$sampsize
@@ -453,7 +453,7 @@ svy2lme_nested<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
 
  
 print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
-    cat("Linear mixed model fitted by pairwise likelihood\n")
+    cat("Linear mixed model fitted by pairwise pseudolikelihood\n")
     cat("Formula: ")
     cat(paste(deparse(x$formula),collapse="\n"))
     cat("\nRandom effects:\n")
