@@ -59,16 +59,17 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     n<-NROW(X)
     
     ## Z in lme4::lmer has separate columns for each cluster; restructure it
-    Z<-matrix(nrow=n, ncol=sum(qis))
-    pos<-0
-    npos<-0
-    for(i in 1:length(qis)){
-        qi<-qis[i]
-        n1i<-n1s[i]
-        Z[,pos+(1:qi)]<-as.matrix(crossprod(m0@pp$Zt[npos+(1:(n1i*qi)),,drop=FALSE], outer(1:(n1i*qi),1:qi,function(i,j) ((i-j) %% qi)==0)*1))
-        pos<-pos+qi
-        npos<-npos+qi*n1i
-    }
+    ## Z<-matrix(nrow=n, ncol=sum(qis))
+    ## pos<-0
+    ## npos<-0
+    ## for(i in 1:length(qis)){
+    ##     qi<-qis[i]
+    ##     n1i<-n1s[i]
+    ##     Z[,pos+(1:qi)]<-as.matrix(crossprod(m0@pp$Zt[npos+(1:(n1i*qi)),,drop=FALSE], outer(1:(n1i*qi),1:qi,function(i,j) ((i-j) %% qi)==0)*1))
+    ##     pos<-pos+qi
+    ##     npos<-npos+qi*n1i
+    ## }
+    Z<-t(m0@pp$Zt)
     
     ## need PSUs as well as clusters now
     psu<-design$cluster[[1]]
@@ -107,19 +108,25 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     L<-as.matrix(Matrix::bdiag(lapply(qi,function(i) matrix(1,i,i))))  ##FIXME: no, it's a lot more complicated
     ###(need indicator for where thetas go in the matrix)
     ThInd<-which((L==1) & lower.tri(L,diag=TRUE))
+    Lambda<- lme4::getME(m0, "Lambda")
+    Zt<-lme4::getME(m0,"Zt")
     
     ## profile pairwise deviance
     devfun<-function(theta,pwt){
         ## variance parameters: Cholesky square root of variance matrix
-        Th<-matrix(0,q,q)
-        Th[ThInd]<-theta
-        L[]<<-tcrossprod(Th)
-
+        Lind<-lme4::getME(m0, "Lind")
+        Lambda@x<- theta[Lind]
+        ## Full (sparse) vcov(Y)
+        Xi<-tcrossprod(crossprod(Zt, Lambda)) + Diagonal(n)
+        D<-diag(Xi)
+        
         ## v11 is a vector of (1,1) entries of the matrix var(Y)
         ## for each pair, similarly for the others
-        v11<-(rowSums(Z[ii,,drop=FALSE]*( Z[ii,,drop=FALSE]%*%L))+1)
-        v12<-rowSums(Z[ii,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))
-        v22<-(rowSums(Z[jj,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))+1)
+        v11<-D[ii]
+        v22<-D[jj]
+        v12<-Xi[cbind(ii,jj)]
+        
+
         ## explicit 2x2 determinants
         det<-v11*v22-v12*v12
         ## explicit 2x2 inverses
@@ -169,13 +176,19 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ## Standard errors of regression parameters
     Vbeta<-function(theta,pwt){
         ## setup exactly as in devfun
-        Th<-matrix(0,q,q)
-        Th[ThInd]<-theta
-        L<<-tcrossprod(Th)
+        ## variance parameters: Cholesky square root of variance matrix
+        Lind<-lme4::getME(m0, "Lind")
+        Lambda@x<- theta[Lind]
+        ## Full (sparse) vcov(Y)
+        Xi<-tcrossprod(crossprod(Zt, Lambda)) + Diagonal(n)
+        D<-diag(Xi)
         
-        v11<-(rowSums(Z[ii,,drop=FALSE]*( Z[ii,,drop=FALSE]%*%L))+1)
-        v12<-rowSums(Z[ii,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))
-        v22<-(rowSums(Z[jj,,drop=FALSE]*(Z[jj,,drop=FALSE]%*%L))+1)
+        ## v11 is a vector of (1,1) entries of the matrix var(Y)
+        ## for each pair, similarly for the others
+        v11<-D[ii]
+        v22<-D[jj]
+        v12<-Xi[cbind(ii,jj)]
+        
         det<-v11*v22-v12*v12
         inv11<- v22/det
         inv22<- v11/det
@@ -228,7 +241,11 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
 
     ## variance of betas, if wanted
     Vbeta<-if (sterr) Vbeta(fit$par,pwts) else matrix(NA,q,q)
-    
+
+    ## variance components
+    Th<-matrix(0,q,q)
+    Th[ThInd]<-theta
+    L<-tcrossprod(Th)
     ## return all the things
     rval<-list(opt=fit,
                s2=s2,
