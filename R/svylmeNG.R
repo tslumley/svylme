@@ -244,7 +244,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
 
     ## variance components
     Th<-matrix(0,q,q)
-    Th[ThInd]<-theta
+    Th[ThInd]<-fit$par
     L<-tcrossprod(Th)
     ## return all the things
     rval<-list(opt=fit,
