@@ -1,3 +1,5 @@
+library(lme4)
+library(svylme)
 
 N1=400 
 N2=400 
@@ -34,7 +36,7 @@ model_cluster<-function(population, overlap){
 population<-model_cluster(population,overlap)
 
 
-rr<-replicate(1000, {
+rr<-replicate(100, {
     population$x<- population$long %% 40
     population$z<-rnorm(400*400)
     population$u<-sort(rnorm(400))[population$cluster]
@@ -66,9 +68,9 @@ rr<-replicate(1000, {
     
     
     c(
-        cfsvy(svy2lme(y~x+z+(1|cluster),design=des)),
-        cflmer(lmer(y~x+z+(1|cluster),population)),
-        cflmer(lmer(y~x+z+(1|cluster),stage2))
+        cfsvy(svy2lme(y~x+z+(1|cluster)+(1|strata),design=des)),
+        cflmer(lmer(y~x+z+(1|cluster)+(1|strata),population)),
+        cflmer(lmer(y~x+z+(1|cluster+(1|strata),stage2))
     )
 })
 
