@@ -36,10 +36,7 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
     
 
     ## all pairs within same cluster
-    ## Conceptually, the union of 
-    ## ij<-subset(expand.grid(i=1:n,j=1:n), (g[i] == g[j]) & (i<j))
-    ## but needs to work when n^2 is too big to construct
-    ##ij<-getallpairs(gs)
+    ## needs to be all correlated (in the model) pairs
     Lambda<- lme4::getME(m0, "Lambda")
     Zt<-lme4::getME(m0,"Zt")
     Xi<-tcrossprod(crossprod(Zt, Lambda)) + Diagonal(n)
