@@ -8,8 +8,7 @@ Linear mixed models by pairwise likelihood
 }
 \description{
 Fits linear mixed models by profile pairwise composite
-likelihood. Currently allows two-level models, but these may contain
-crossed random effects and the model clusters need not be the sampling units.
+likelihood. 
 }
 \usage{
 svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE, method=c("general","nested"))
@@ -35,7 +34,7 @@ svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE, method=c("general","n
 
   \item{return.devfun}{If \code{TRUE}, return the deviance function as a
     component of the object. This will increase the memory use
-    substantially, but allows for bootstrapping}
+    substantially, but allows for bootstrapping.}
   \item{method}{\code{"nested"} requires the model clusters to be nested
     in the design sampling units. It's faster and better tested}
   \item{object}{\code{svy2lme} object}
@@ -85,7 +84,13 @@ svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE, method=c("general","n
     in the stratum, and then added up across strata. When the sampling
     and model structure are the same, this is the estimator of Yi et al,
     but it also allows for there to be sampling stages before the stages
-    that are modelled, and for the model and sampling structures to be different.
+    that are modelled, and for the model and sampling structures to be
+    different.
+
+    The \code{return.devfun=TRUE} option is useful if you want to
+    examine objects that aren't returned as part of the output. For
+    example, \code{get("ij", environment(object$devfun))} is the set of
+    pairs used in computation. 
   
 }
 \value{

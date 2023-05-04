@@ -41,7 +41,7 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
     Lambda<- lme4::getME(m0, "Lambda")
     Zt<-lme4::getME(m0,"Zt")
     Xi<-tcrossprod(crossprod(Zt, Lambda)) + Diagonal(n)
-    ij<-subset(expand.grid(i=1:n,j=1:n),i<j)
+    ij<-subset(expand.grid(i=1:n,j=1:n),i!=j)
     ij<-ij[Xi[as.matrix(ij)]!=0,]
     
     ## columns of indices for first and second observation in a pair
@@ -254,10 +254,7 @@ relmatLmer_naive <- function(formula, data = NULL,
   flist <- lmod$reTrms[["flist"]]   ## list of factors
 
   ind <- (relnms %in% names(flist))
-  if(any(ind)) {
-    ## random-effects design matrix components
-    ##Ztlist <- lmod$reTrms[["Ztlist"]]
-    
+  if(any(ind)) {   
     asgn <- attr(flist, "assign")
     for(i in seq_along(relnms[ind])) {
       
@@ -294,14 +291,11 @@ relmatLmer_naive <- function(formula, data = NULL,
     }
   }
   lmod$reTrms[["Zt"]] <- do.call(rbind, lmod$reTrms$Ztlist)
-    ##-------------------------------
-    ## end of relmatLmer-specific code
-    ##-------------------------------
     
   mcout$formula <- lmod$formula
   lmod$formula <- NULL
   
-  devfun <- do.call(mkLmerDevfun, c(lmod,list(start = start)))#, verbose = verbose, control = control)))
+    devfun <- do.call(mkLmerDevfun, c(lmod,list(start = start)))#, verbose = verbose, control = control)))
   
     opt <-optimizeLmer(devfun,start=start)
         
