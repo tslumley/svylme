@@ -4,7 +4,8 @@ getallpairs<-function(gps, TOOBIG=1000){
     n<-length(gps[1])
     if (n < TOOBIG){
         ijall<-Reduce("|", lapply(gps, function(gp) outer(gp,gp,"==")), FALSE)
-        return(which(ijall & upper.tri(ijall), arr.ind=TRUE))
+        diag(ijall)<-FALSE
+        return(which(ijall, arr.ind=TRUE)) ## return(which(ijall & upper.tri(ijall), arr.ind=TRUE))
     } 
 
     alli<-list(); allj<-list()
@@ -36,8 +37,6 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     
     ## Use unweighted model to get starting values and set up variables
     m0<-lme4::lmer(formula,data,REML=FALSE)
-
-    ## FIXME: lmer will have reordered the data, which messes up Zt
     
     ## remove missing from design
     if (!is.null(naa<-attr(m0@frame,"na.action"))){

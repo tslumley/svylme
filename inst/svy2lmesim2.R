@@ -40,11 +40,7 @@ rr<-replicate(100, {
     population$x<- population$long %% 40
     population$z<-rnorm(400*400)
     population$u<-sort(rnorm(400))[population$cluster]
-    population$y<- with(population, x+z + u+rnorm(400*400))
-    
-    
-    lmer(y~z+x+(1|cluster), data=population)
-    
+    population$y<- with(population, x+z + u+rnorm(400*400))    
     
     population$strata<-(population$long-1) %/% 40
     population$uid<-1:nrow(population)
