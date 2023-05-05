@@ -47,7 +47,7 @@ more pairs).
 
 }
 \source{
-  Constructed at \url{https://github.com/%20/blob/master/vignettes/pedigreemm.Rmd}
+  Constructed at \url{https://github.com/variani/lme4qtl/blob/master/vignettes/pedigreemm.Rmd}
 }
 \references{
    2010. A.I. Vazquez, D.M. Bates, G.J.M. Rosa, D. Gianola and K.A. Weigel.
