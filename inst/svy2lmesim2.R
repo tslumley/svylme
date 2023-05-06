@@ -12,11 +12,11 @@ overlap=ceiling(N2*3/4)
 
 cflmer<-function(model){
     a<-VarCorr(model)
-    c(fixef(model), as.vector(a[[1]]), attr(a,"sc")^2)
+    c(fixef(model), as.vector(unlist(a[1:2])), attr(a,"sc")^2)
     }
 cfsvy<-function(model){
     a<-coef(model, random=TRUE)
-    c(coef(model), a$varb,a$s2)
+    c(coef(model), diag(a$varb),a$s2)
     }
 
 
