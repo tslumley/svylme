@@ -11,7 +11,7 @@ Fits linear mixed models by profile pairwise composite
 likelihood. 
 }
 \usage{
-svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE, method=c("general","nested"))
+svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE, method=c("general","nested"), all.pairs=FALSE)
 \method{coef}{svy2lme}(object,...,random=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -37,6 +37,7 @@ svy2lme(formula, design, sterr=TRUE,  return.devfun=FALSE, method=c("general","n
     substantially, but allows for bootstrapping.}
   \item{method}{\code{"nested"} requires the model clusters to be nested
     in the design sampling units. It's faster and better tested}
+    \item{all.pairs}{Only with \code{method="general"}, use all pairs rather than just correlated pairs?}		   
   \item{object}{\code{svy2lme} object}
   \item{\dots}{for method compatibility}
     \item{random}{if \code{TRUE}, the variance components rather than

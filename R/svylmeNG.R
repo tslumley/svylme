@@ -27,11 +27,12 @@ getallpairs<-function(gps, TOOBIG=1000){
 }
 
 
-svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("general","nested")){
+svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("general","nested"), all.pairs=FALSE){
 
     method<-match.arg(method)
     if(method=="nested"){
-       return(svy2lme_nested(formula,design, sterr=sterr, return.devfun=return.devfun))
+        if(all.pairs) stop("all.pairs=TRUE not allowed for method='nested'")
+        return(svy2lme_nested(formula,design, sterr=sterr, return.devfun=return.devfun))
     }
     data<-model.frame(design)
     
@@ -75,16 +76,19 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ## need PSUs as well as clusters now
     psu<-design$cluster[[1]]
     
-
-    ## all pairs within same cluster
-    ## Conceptually, the union of 
-    ## ij<-subset(expand.grid(i=1:n,j=1:n), (g[i] == g[j]) & (i<j))
-    ## but needs to work when n^2 is too big to construct
-    ij<-getallpairs(gs)
-    
+    if (all.pairs){
+        ij<-subset(expand.grid(i=1:n,j=1:n),i!=j)
+    } else{
+        ## all pairs within same cluster
+        ## Conceptually, the union of 
+        ## ij<-subset(expand.grid(i=1:n,j=1:n), (g[i] == g[j]) & (i<j))
+        ## but needs to work when n^2 is too big to construct
+        ij<-getallpairs(gs)
+    }
     ## columns of indices for first and second observation in a pair
     ii<-ij[,1]
     jj<-ij[,2]
+    
     npairs<-nrow(ij)
     
     p<-NCOL(X)
