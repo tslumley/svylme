@@ -117,7 +117,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     Zt<-lme4::getME(m0,"Zt")
     
     ## profile pairwise deviance
-    devfun<-function(theta,pwt){
+    devfun<-function(theta, pwt, pw_uni=NULL, subtract_margins=FALSE){
         ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
         Lambda@x<- theta[Lind]
@@ -155,6 +155,17 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
             crossprod(Xii,pwt*inv12*y[jj])+
             crossprod(Xjj,pwt*inv12*y[ii])
 
+        ## all pairs by subtraction
+        if (subtract_margins){
+            xtwx_margin<-crossprod(X,pw_uni*X/v_margin)
+            xtwy_margin<-crossprod(X,pw_uni*y/v_margin)
+            xtwx_ind<- crossprod(Xii,pwt*Xii/v11) + crossprod(Xjj,pwt*Xjj/v22)
+            xtwy_ind<-crossprod(Xii,pwt*y[ii]/v11) + crossprod(Xjj,pwt*y[jj]/v22)     
+            
+            xtwx<-xtwx+xtwx_margin-xtwx_ind
+            xtwy<-xtwy+xtwy_margin-xtwy_ind
+        }
+
         ## betahat at the given variance parameter values
         beta<<-solve(xtwx,xtwy)
         Xbeta<-X%*%beta
@@ -169,11 +180,18 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
             crossprod(r2,pwt*inv22*r2)+
             crossprod(r1,pwt*inv12*r2)+
             crossprod(r2,pwt*inv12*r1)
-
-        Nhat<-sum(pwt)*2
+        
+        ## all pairs by subtraction
+        if (subtract_margins){
+            qf_margin<-crossprod(r,pw_uni*r/v_margin)
+            qf_ind<-crossprod(r1,pwt*r1/v11)+crossprod(r2,pwt*r2/v22)
+            qf<-qf+qf_margin-qf_ind
+        }
+        
+        
+        Nhat<-sum(pwt)*2 ##FIXME for pairs by subtraction
         s2<<-qf/Nhat
         
-        ##sum(log(det)*pwt) + qf 
         sum(log(det)*pwt) + Nhat*log(qf*2*pi/Nhat)
         
     }
