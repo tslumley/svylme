@@ -83,6 +83,7 @@ is_close<-function(a,b, tolerance=1e-5){
 
 "%//%"<-function(e1,e2) ifelse(e1==0,0, e1/e2)
 
+
 pi_from_design<-function(design, ii,jj){
 
     if (design$pps && !is.null(design$dcheck)){
@@ -145,7 +146,7 @@ pi_from_design<-function(design, ii,jj){
                             first=n[ii]/N[ii],
                             cond=rep(1,length(ii))))
             } else {
-                ## Hajek high entropy: Brewer p153
+                ## Hajek high entropy: based on Brewer p153, equation 9.14
                 pi<-design$allprob
                 denom<-ave(1-pi, design$strata,FUN=sum)
                 samestrata<-(design$strata[ii,1]==design$strata[jj,1])
@@ -173,6 +174,7 @@ pi_from_design<-function(design, ii,jj){
     }
     if(all.equal(as.matrix(design$allprob), as.matrix(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
         ## multistage stratified random sampling
+        ## FIXME: wrong when i and j are in different PSUs
         last<-ncol(design$allprob)
         n<-design$fpc$sampsize
         N<-design$fpc$popsize
