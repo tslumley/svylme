@@ -84,6 +84,14 @@ is_close<-function(a,b, tolerance=1e-5){
 "%//%"<-function(e1,e2) ifelse(e1==0,0, e1/e2)
 
 
+
+## For nested sampling: assumes PSUs are not correlated and so a
+## pair can't have observations from two PSUs
+## $first are marginal PSU weights
+## $cond are conditional pairwise weights given that the PSU is selected
+## $all are the full pairwise weights
+## first and cond are needed for the sandwich estimator, not for the
+##   pairwise likelihood itself
 pi_from_design<-function(design, ii,jj){
 
     if (design$pps && !is.null(design$dcheck)){
@@ -122,7 +130,7 @@ pi_from_design<-function(design, ii,jj){
                             first=n[ii]/N[ii],
                             cond=rep(1,length(ii))))
             } else {
-                ## Hajek high entropy: Brewer p153
+                ## Hajek high entropy: based on Brewer p153, equation 9.14
                 pi<-design$allprob
                 denom<-ave(1-pi, design$strata,FUN=sum)
                 samestrata<-(design$strata[ii]==design$strata[jj])
@@ -142,7 +150,7 @@ pi_from_design<-function(design, ii,jj){
                 # srs, possibly stratified
                 n<-design$fpc$sampsize
                 N<-design$fpc$popsize
-                return(list(full= n[ii]/N[ii],
+                return(list(full= (n[ii]/N[ii]),
                             first=n[ii]/N[ii],
                             cond=rep(1,length(ii))))
             } else {
@@ -174,7 +182,6 @@ pi_from_design<-function(design, ii,jj){
     }
     if(all.equal(as.matrix(design$allprob), as.matrix(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
         ## multistage stratified random sampling
-        ## FIXME: wrong when i and j are in different PSUs
         last<-ncol(design$allprob)
         n<-design$fpc$sampsize
         N<-design$fpc$popsize

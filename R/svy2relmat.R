@@ -57,7 +57,7 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
     beta<-beta0<-lme4::fixef(m0)
 
     ## second-order weights
-    allpwts<-svylme:::pi_from_design(design,ii,jj)
+    allpwts<-svylme:::all_pi_from_design(design,ii,jj)
     pwts<-1/allpwts$full
     if (sterr){
         if (is.null(allpwts$cond))

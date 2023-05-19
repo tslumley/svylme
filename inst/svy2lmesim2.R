@@ -64,9 +64,9 @@ rr<-replicate(100, {
     
     
     c(
-        cfsvy(svy2lme(y~x+z+(1|cluster)+(1|strata), design=des)),
-        cflmer(lmer(y~x+z+(1|cluster)+(1|strata), population)),
-        cflmer(lmer(y~x+z+(1|cluster)+(1|strata), stage2))
+        cfsvy(svy2lme(y~x+z+(1|cluster), design=des)),
+        cflmer(lmer(y~x+z+(1|cluster), population)),
+        cflmer(lmer(y~x+z+(1|cluster), stage2))
     )
 })
 

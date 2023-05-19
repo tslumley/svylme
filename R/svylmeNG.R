@@ -99,7 +99,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     beta<-beta0<-lme4::fixef(m0)
 
     ## second-order weights
-    allpwts<-svylme:::pi_from_design(design,ii,jj)
+    allpwts<-svylme:::all_pi_from_design(design,ii,jj)
     pwts<-1/allpwts$full
     if (sterr){
         if (is.null(allpwts$cond))
@@ -237,7 +237,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
             Xjj*pwt2*(inv12*r1)
 
        
-        ## The grouping variables here are PSUs, not clusters
+        ## The grouping variables here are PSUs, not clusters (FIXME: ??)
         pw1<-1/p1
         
         if (is.null(design)){
@@ -286,4 +286,126 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     
     class(rval)<-"svy2lme"
     rval
+}
+
+
+## pairwise probabilities: does *not* assume nesting
+## probably does assume no more than two-stage sampling FIXME
+all_pi_from_design<-function(design, ii,jj){
+
+    if (design$pps && !is.null(design$dcheck)){
+        ## We have pairwise probabilities already. Or, at least, covariances
+        Deltacheck<-design$dcheck[ii,jj]
+        indep<-design$prob[ii]*design$prob[jj]
+        pi_ij<-(Deltacheck+1)*indep
+
+        last<-ncol(design$allprob)
+        n<-design$fpc$sampsize
+        N<-design$fpc$popsize
+
+        ## But sandwich standard errors would require fourth-order probabilities
+        return(list(full=pi_ij,
+                    first=NULL,
+                    cond=NULL))
+        }
+    
+    if (NCOL(design$allprob)==1){
+        ## No multistage weights
+        if (NCOL(design$cluster)>1)
+            stop("you need weights/probabilities for each stage of sampling")
+        
+        if (NCOL(design$cluster)==1 && !any(duplicated(design$cluster))){
+            ## ok, element sampling, can't be same PSU
+            if(is.null(design$fpc$popsize)) #with replacement
+                return(list(full=design$prob[ii]*design$prob[jj],
+                            first=design$prob[ii],
+                            cond=rep(1,length(ii))))
+            else if(is_close(as.vector(design$allprob),
+                             as.vector(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
+                ## srs, possibly stratified
+                n<-design$fpc$sampsize
+                N<-design$fpc$popsize
+                return(list(full= n[ii]*(n[jj]-1)%//%( N[ii]*(N[jj]-1)),
+                            first=n[ii]/N[ii],
+                            cond=rep(1,length(ii))))
+            } else {
+                ## Hajek high entropy: based on Brewer p153, equation 9.14
+                pi<-design$allprob
+                denom<-ave(1-pi, design$strata,FUN=sum)
+                samestrata<-(design$strata[ii]==design$strata[jj])
+                return(list(full=pi[ii]*pi[jj]*(1- ifelse(samestrata, (1-pi[ii])*(1-pi[jj])/denom, 0)),
+                            first=pi[ii],
+                            cond=rep(1,length(ii))))
+            }
+        } else if (all(by(design$prob, design$cluster[,1], function(x) length(unique(x)))==1)) {
+            ## possibly ok, sampling of whole PSUs
+            warning("assuming no subsampling within PSUs because multi-stage weights were not given")
+            
+            samePSU<-design$cluster[ii,1]==design$cluster[jj,1]
+
+            if(is.null(design$fpc$popsize)){ #with replacement
+                 return(list(full=ifelse(samePSU, design$prob[ii], design$prob[ii]*design$prob[jj]),
+                             first=design$prob[ii],
+                             cond=rep(1, length(ii))))
+            } else if(is_close(as.vector(design$allprob[[1]]),
+                              as.vector(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
+                # srs, possibly stratified
+                n<-design$fpc$sampsize
+                N<-design$fpc$popsize
+                return(list(full= ifelse(samePSU, (n[ii]/N[ii]),(n[ii]/N[ii])*(n[jj]/N[jj])),
+                            first=n[ii]/N[ii],
+                            cond=rep(1,length(ii))))
+            } else {
+                ## Hajek high entropy: based on Brewer p153, equation 9.14
+                pi<-design$allprob
+                denom<-ave(1-pi, design$strata,FUN=sum)
+                samestrata<-(design$strata[ii,1]==design$strata[jj,1])
+                return(list(full=ifelse(samePSU, pi[ii,1], pi[ii,1]*pi[jj,1]*(1- ifelse(samestrata, (1-pi[ii,1])*(1-pi[jj,1])/denom, 0))),
+                            first=pi[ii,1],
+                            cond=rep(1,length(ii))))
+            }
+        } else {
+            ## not ok
+            stop("you need weights/probabilities for each stage of sampling")
+        }       
+    }
+
+    ## If we're here, we have multistage weights
+    if (ncol(design$allprob)!=ncol(design$cluster)){
+        ## ? can't happen
+        stop("number of stages of sampling does not match number of stages of weights")
+    }
+    samePSU<-design$cluster[ii,1]==design$cluster[jj,1]
+
+    if(is.null(design$fpc$popsize)){ #with replacement
+        last<-ncol(design$allprob)
+        return(list(full=ifelse(samePSU, design$prob[ii]*design$allprob[jj,last],design$prob[ii]*design$prob[jj]),
+                    first=apply(design$allprob[ii,-last, drop=FALSE], 1, prod),
+                    cond=design$allprob[ii,last]*design$allprob[jj,last]))
+    }
+    if(all.equal(as.matrix(design$allprob), as.matrix(design$fpc$sampsize/design$fpc$popsize),tolerance=1e-4)){
+        ## multistage stratified random sampling
+        last<-ncol(design$allprob)
+        n<-design$fpc$sampsize
+        N<-design$fpc$popsize
+        samestrata<-(design$strata[ii, ]==design$strata[jj, ])
+        pstages <-(n[ii,]/N[ii,])*(samestrata*((n[jj,]-1)%//%(N[jj,]-1)) + (1-samestrata)*(n[jj,]/N[jj,]))  ##FIXME divide by  zero when N==1
+        return(list(full=ifelse(samePSU, apply((n[ii,]/N[ii,])[,-last,drop=FALSE],1,prod)*pstages[,last],design$prob[ii]*design$prob[jj]),
+                    first=apply((n[ii,]/N[ii,])[,-last,drop=FALSE],1,prod),
+                    cond=pstages[,last]))
+    }
+
+    ## Hajek high entropy: Brewer p153
+    first<-cpwt<-rep_len(1,length(ii))
+    for (i in 1:ncol(design$allprob)){
+        pi<-design$allprob[,i]
+        denom<-ave(1-pi, design$strata[,i],FUN=sum)
+        samestrata<-(design$strata[ii,i]==design$strata[jj,i])
+        if (i==ncol(design$allprob))
+            cpwt<-cpwt*pi[ii]*pi[jj]*(1- ifelse(samestrata, (1-pi[ii])*(1-pi[jj])/denom, 0))
+        else
+            first<-first*pi[ii]
+    }
+    return(list(full=ifelse(samePSU, first*cpwt,design$prob[ii]*design$prob[jj]), first= first, cond=cpwt))
+
 }
