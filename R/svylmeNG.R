@@ -175,6 +175,8 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         r1<-r[ii]
         r2<-r[jj]
 
+        Nhat<-sum(pwt)*2 ##FIXME for pairs by subtraction
+
         ## -2 times Gaussian log profile pairwise likelihood
         qf<-crossprod(r1,pwt*inv11*r1)+
             crossprod(r2,pwt*inv22*r2)+
@@ -183,13 +185,11 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         
         ## all pairs by subtraction
         if (subtract_margins){
-            qf_margin<-crossprod(r,pw_uni*r/v_margin)
+            qf_margin<-(Nhat-1)*crossprod(r,pw_uni*r/v_margin)
             qf_ind<-crossprod(r1,pwt*r1/v11)+crossprod(r2,pwt*r2/v22)
             qf<-qf+qf_margin-qf_ind
         }
         
-        
-        Nhat<-sum(pwt)*2 ##FIXME for pairs by subtraction
         s2<<-qf/Nhat
         
         sum(log(det)*pwt) + Nhat*log(qf*2*pi/Nhat)
