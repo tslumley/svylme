@@ -197,6 +197,17 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     }
 
     ## Standard errors of regression parameters
+    ##
+    ## If beta = (X^TMX)^{-1}(XTMY)
+    ## the middle of the sandwich is the sum over design-correlated pairs
+    ## of X^TM(Y-mu)^T(Y-mu)MX
+    ##
+    ## off-diag M is just off-diag Xi[ij]^{-1}/pi_{ij}, ie, inv12/pi_ij
+    ## diag M is sum of diag Xi[ij]^{-1}/pi_{ij} for all pairs with i in them
+    ## ie, sum_j(inv11/pi_ij) but being careful about indices
+    ##
+    ## The nested version was simpler because pairs were always in the same PSU
+    
     Vbeta<-function(theta,pwt){
         ## setup exactly as in devfun
         ## variance parameters: Cholesky square root of variance matrix
@@ -230,14 +241,14 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         r1<-r[ii]
         r2<-r[jj]
 
-        ## score for betas
+        ## score for betas FIXME
         xwr<-Xii*pwt2*(inv11*r1)+
             Xjj*pwt2*(inv22*r2)+
             Xii*pwt2*(inv12*r2)+
             Xjj*pwt2*(inv12*r1)
 
        
-        ## The grouping variables here are PSUs, not clusters (FIXME: ??)
+        ## The grouping variables here are PSUs (not model clusters)
         pw1<-1/p1
         
         if (is.null(design)){
