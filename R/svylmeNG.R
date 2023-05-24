@@ -60,23 +60,13 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     q<-sum(qis)
     n<-NROW(X)
     
-    ## Z in lme4::lmer has separate columns for each cluster; restructure it
-    ## Z<-matrix(nrow=n, ncol=sum(qis))
-    ## pos<-0
-    ## npos<-0
-    ## for(i in 1:length(qis)){
-    ##     qi<-qis[i]
-    ##     n1i<-n1s[i]
-    ##     Z[,pos+(1:qi)]<-as.matrix(crossprod(m0@pp$Zt[npos+(1:(n1i*qi)),,drop=FALSE], outer(1:(n1i*qi),1:qi,function(i,j) ((i-j) %% qi)==0)*1))
-    ##     pos<-pos+qi
-    ##     npos<-npos+qi*n1i
-    ## }
     Z<-t(m0@pp$Zt)
     
     ## need PSUs as well as clusters now
     psu<-design$cluster[[1]]
     
     if (all.pairs){
+        ## unavoidably going to be big
         ij<-subset(expand.grid(i=1:n,j=1:n),i!=j)
     } else{
         ## all pairs within same cluster
