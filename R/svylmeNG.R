@@ -294,6 +294,9 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
 
 ## pairwise probabilities: does *not* assume nesting
 ## probably does assume no more than two-stage sampling FIXME
+##
+## we only use $full, not the other components.
+##
 all_pi_from_design<-function(design, ii,jj){
 
     if (design$pps && !is.null(design$dcheck)){
