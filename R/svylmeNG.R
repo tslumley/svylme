@@ -198,7 +198,8 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ##
     ## The nested version was simpler because pairs were always in the same PSU
     
-    Vbeta<-function(theta,pwt){
+    Vbeta<-function(theta,pwt, subtract_margins=FALSE){
+        if (subtract_margins) stop("sandwich estimator for subtract_margins=TRUE not yet implemented")
         ## setup exactly as in devfun
         ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
@@ -232,28 +233,20 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         r1<-r[ii]
         r2<-r[jj]
 
-        ## FIXME variability matrix ('cheese')
-
-        W12<-inv12*pwt
-        W11<-rowsum(inv11*pwt,ii)
-        W22<-rowsum(inv22*pwt,ii) 
-
-
-
-        ## score for betas FIXME
-        xwr<-Xii*pwt2*(inv11*r1)+
-            Xjj*pwt2*(inv22*r2)+
-            Xii*pwt2*(inv12*r2)+
-            Xjj*pwt2*(inv12*r1)
+        ##  variability matrix ('cheese')
+        ## score for betas 
+        xwr<-Xii*pwt*(inv11*r1)+
+            Xjj*pwt*(inv22*r2)+
+            Xii*pwt*(inv12*r2)+
+            Xjj*pwt*(inv12*r1)
 
        
         ## The grouping variables here are PSUs (not model clusters)
-        pw1<-1/p1
         
         if (is.null(design)){
           stop("standard errors need a design argument")
         }
-        inffun<-rowsum( (xwr*pw1)%*%solve(xtwx), psu[ii], reorder=FALSE)
+        inffun<-rowsum( xwr%*%solve(xtwx), psu[ii], reorder=FALSE)
         
         stratPSU<-design$strata[,1][ii[!duplicated(psu[ii])]] ##FIXME to allow single-PSU strata?
         

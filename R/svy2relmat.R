@@ -137,6 +137,17 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
     }
 
     ## Standard errors of regression parameters
+    ##
+    ## If beta = (X^TWX)^{-1}(XTWY)
+    ## the middle of the sandwich is the sum over design-correlated pairs
+    ## of X^TW(Y-mu)^T(Y-mu)WX
+    ##
+    ## off-diag W is just off-diag Xi[ij]^{-1}/pi_{ij}, ie, inv12/pi_ij
+    ## dia W is sum of diag Xi[ij]^{-1}/pi_{ij} for all pairs with i in them
+    ## ie, sum_j(inv11/pi_ij) but being careful about indices
+    ##
+    ## The nested version was simpler because pairs were always in the same PSU
+    
     Vbeta<-function(theta,pwt){
         ## setup exactly as in devfun
         ## variance parameters: Cholesky square root of variance matrix
@@ -159,7 +170,8 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
         
         Xii<-X[ii,,drop=FALSE]
         Xjj<-X[jj,,drop=FALSE]
-        
+
+        ## sensitivity matrix ('bread')
         xtwx<- crossprod(Xii,pwt*inv11*Xii)+
             crossprod(Xjj,pwt*inv22*Xjj)+
             crossprod(Xii,pwt*inv12*Xjj)+
@@ -170,20 +182,20 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
         r1<-r[ii]
         r2<-r[jj]
 
-        ## score for betas
-        xwr<-Xii*pwt2*(inv11*r1)+
-            Xjj*pwt2*(inv22*r2)+
-            Xii*pwt2*(inv12*r2)+
-            Xjj*pwt2*(inv12*r1)
+        ##  variability matrix ('cheese')
+        ## score for betas 
+        xwr<-Xii*pwt*(inv11*r1)+
+            Xjj*pwt*(inv22*r2)+
+            Xii*pwt*(inv12*r2)+
+            Xjj*pwt*(inv12*r1)
 
        
-        ## The grouping variables here are PSUs, not clusters
-        pw1<-1/p1
+        ## The grouping variables here are PSUs (not model clusters)
         
         if (is.null(design)){
           stop("standard errors need a design argument")
         }
-        inffun<-rowsum( (xwr*pw1)%*%solve(xtwx), psu[ii], reorder=FALSE)
+        inffun<-rowsum( xwr%*%solve(xtwx), psu[ii], reorder=FALSE)
         
         stratPSU<-design$strata[,1][ii[!duplicated(psu[ii])]] ##FIXME to allow single-PSU strata?
         

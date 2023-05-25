@@ -63,7 +63,7 @@ svy2lme(sdMilk ~ lact + log(dim) + (1|herd), design=herd_des,method="nested")
 svy2lme(sdMilk ~ lact + log(dim) + (1|herd), design=herd_des,method="general")
 
 ## pairwise result is closer to herd 89 than to remainder
-lmer(sdMilk ~ lact + log(dim) + (1|herd), data=milk_subset)
+lme4::lmer(sdMilk ~ lact + log(dim) + (1|herd), data=milk_subset)
 svy2relmer(sdMilk ~ lact + log(dim) + (1|id) + (1|herd), design=herd_des,
     relmat = list(id = A_gen))
 }
