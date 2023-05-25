@@ -136,6 +136,7 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
         
     }
 
+   
     ## Standard errors of regression parameters
     ##
     ## If beta = (X^TWX)^{-1}(XTWY)
@@ -143,12 +144,13 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
     ## of X^TW(Y-mu)^T(Y-mu)WX
     ##
     ## off-diag W is just off-diag Xi[ij]^{-1}/pi_{ij}, ie, inv12/pi_ij
-    ## dia W is sum of diag Xi[ij]^{-1}/pi_{ij} for all pairs with i in them
+    ## diag W is sum of diag Xi[ij]^{-1}/pi_{ij} for all pairs with i in them
     ## ie, sum_j(inv11/pi_ij) but being careful about indices
     ##
     ## The nested version was simpler because pairs were always in the same PSU
     
-    Vbeta<-function(theta,pwt){
+    Vbeta<-function(theta,pwt, subtract_margins=FALSE){
+        if (subtract_margins) stop("sandwich estimator for subtract_margins=TRUE not yet implemented")
         ## setup exactly as in devfun
         ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
@@ -207,6 +209,38 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
         V
     }
     
+    
+    
+    ## Powell's derivative-free quadratic optimiser
+    fit<-minqa::bobyqa(theta0, devfun,
+                lower = m0@lower,
+                upper = rep(Inf, length(theta)), pwt=pwts)
+
+    ## variance of betas, if wanted
+    Vbeta<-if (sterr) Vbeta(fit$par,pwts) else matrix(NA,q,q)
+
+    ## variance components
+    Th<-matrix(0,q,q)
+    Th[ThInd]<-fit$par
+    L<-tcrossprod(Th)
+    ## return all the things
+    rval<-list(opt=fit,
+               s2=s2,
+               beta=beta,
+               Vbeta=Vbeta,
+               formula=formula,
+               znames=do.call(c,m0@cnms),
+               L=L)
+    
+    ## for resampling
+    if(return.devfun) {
+        rval$devfun<-devfun
+        rval$lower<-m0@lower
+        }
+    
+    class(rval)<-"svy2lme"
+    rval
+}
     
     
     ## Powell's derivative-free quadratic optimiser

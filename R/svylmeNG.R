@@ -193,7 +193,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ## of X^TW(Y-mu)^T(Y-mu)WX
     ##
     ## off-diag W is just off-diag Xi[ij]^{-1}/pi_{ij}, ie, inv12/pi_ij
-    ## dia W is sum of diag Xi[ij]^{-1}/pi_{ij} for all pairs with i in them
+    ## diag W is sum of diag Xi[ij]^{-1}/pi_{ij} for all pairs with i in them
     ## ie, sum_j(inv11/pi_ij) but being careful about indices
     ##
     ## The nested version was simpler because pairs were always in the same PSU
