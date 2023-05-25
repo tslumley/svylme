@@ -188,12 +188,12 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
 
     ## Standard errors of regression parameters
     ##
-    ## If beta = (X^TMX)^{-1}(XTMY)
+    ## If beta = (X^TWX)^{-1}(XTWY)
     ## the middle of the sandwich is the sum over design-correlated pairs
-    ## of X^TM(Y-mu)^T(Y-mu)MX
+    ## of X^TW(Y-mu)^T(Y-mu)WX
     ##
-    ## off-diag M is just off-diag Xi[ij]^{-1}/pi_{ij}, ie, inv12/pi_ij
-    ## diag M is sum of diag Xi[ij]^{-1}/pi_{ij} for all pairs with i in them
+    ## off-diag W is just off-diag Xi[ij]^{-1}/pi_{ij}, ie, inv12/pi_ij
+    ## dia W is sum of diag Xi[ij]^{-1}/pi_{ij} for all pairs with i in them
     ## ie, sum_j(inv11/pi_ij) but being careful about indices
     ##
     ## The nested version was simpler because pairs were always in the same PSU
@@ -220,7 +220,8 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         
         Xii<-X[ii,,drop=FALSE]
         Xjj<-X[jj,,drop=FALSE]
-        
+
+        ## sensitivity matrix ('bread')
         xtwx<- crossprod(Xii,pwt*inv11*Xii)+
             crossprod(Xjj,pwt*inv22*Xjj)+
             crossprod(Xii,pwt*inv12*Xjj)+
@@ -230,6 +231,14 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         r<-y-Xbeta
         r1<-r[ii]
         r2<-r[jj]
+
+        ## FIXME variability matrix ('cheese')
+
+        W12<-inv12*pwt
+        W11<-rowsum(inv11*pwt,ii)
+        W22<-rowsum(inv22*pwt,ii) 
+
+
 
         ## score for betas FIXME
         xwr<-Xii*pwt2*(inv11*r1)+
