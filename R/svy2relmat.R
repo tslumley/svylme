@@ -59,12 +59,6 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
     ## second-order weights
     allpwts<-svylme:::all_pi_from_design(design,ii,jj)
     pwts<-1/allpwts$full
-    if (sterr){
-        if (is.null(allpwts$cond))
-            stop("Can't get sandwich standard errors for this design")
-        pwt2<-1/allpwts$cond
-        p1<-allpwts$first
-    }
     
     ## variance matrix of random effects
     qi<-sapply(m0@cnms,length)
@@ -207,42 +201,10 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
         centered<- inffun-centering
         V <- crossprod(centered*sqrt(ni/ifelse(ni==1,1,(ni-1))))
         V
+    
     }
     
-    
-    
-    ## Powell's derivative-free quadratic optimiser
-    fit<-minqa::bobyqa(theta0, devfun,
-                lower = m0@lower,
-                upper = rep(Inf, length(theta)), pwt=pwts)
-
-    ## variance of betas, if wanted
-    Vbeta<-if (sterr) Vbeta(fit$par,pwts) else matrix(NA,q,q)
-
-    ## variance components
-    Th<-matrix(0,q,q)
-    Th[ThInd]<-fit$par
-    L<-tcrossprod(Th)
-    ## return all the things
-    rval<-list(opt=fit,
-               s2=s2,
-               beta=beta,
-               Vbeta=Vbeta,
-               formula=formula,
-               znames=do.call(c,m0@cnms),
-               L=L)
-    
-    ## for resampling
-    if(return.devfun) {
-        rval$devfun<-devfun
-        rval$lower<-m0@lower
-        }
-    
-    class(rval)<-"svy2lme"
-    rval
-}
-    
-    
+     
     ## Powell's derivative-free quadratic optimiser
     fit<-minqa::bobyqa(theta0, devfun,
                 lower = m0@lower,

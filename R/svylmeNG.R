@@ -27,7 +27,7 @@ getallpairs<-function(gps, TOOBIG=1000){
 }
 
 
-svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("general","nested"), all.pairs=FALSE){
+svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("general","nested"), all.pairs=FALSE, subtract.margins=FALSE){
 
     method<-match.arg(method)
     if(method=="nested"){
@@ -65,7 +65,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ## need PSUs as well as clusters now
     psu<-design$cluster[[1]]
     
-    if (all.pairs){
+    if (all.pairs && !subtract.margins){
         ## unavoidably going to be big
         ij<-subset(expand.grid(i=1:n,j=1:n),i!=j)
     } else{
@@ -91,13 +91,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ## second-order weights
     allpwts<-svylme:::all_pi_from_design(design,ii,jj)
     pwts<-1/allpwts$full
-    if (sterr){
-        if (is.null(allpwts$cond))
-            stop("Can't get sandwich standard errors for this design")
-        pwt2<-1/allpwts$cond
-        p1<-allpwts$first
-    }
-    
+  
     ## variance matrix of random effects
     qi<-sapply(m0@cnms,length)
     L<-as.matrix(Matrix::bdiag(lapply(qi,function(i) matrix(1,i,i)))) 
@@ -146,14 +140,17 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
             crossprod(Xjj,pwt*inv12*y[ii])
 
         ## all pairs by subtraction
+        ## nb: some observations may not be in *any* correlated pairs
         if (subtract_margins){
+            v_margin <- D
+            pw_uni<-weights(design)
             xtwx_margin<-crossprod(X,pw_uni*X/v_margin)
             xtwy_margin<-crossprod(X,pw_uni*y/v_margin)
             xtwx_ind<- crossprod(Xii,pwt*Xii/v11) + crossprod(Xjj,pwt*Xjj/v22)
             xtwy_ind<-crossprod(Xii,pwt*y[ii]/v11) + crossprod(Xjj,pwt*y[jj]/v22)     
-            
-            xtwx<-xtwx+xtwx_margin-xtwx_ind
-            xtwy<-xtwy+xtwy_margin-xtwy_ind
+            N<-sum(pw_uni)  ## population number of observations
+            xtwx<-xtwx-xtwx_ind+(N-1)*xtwx_margin
+            xtwy<-xtwy-xtwy_ind+(N-1)*xtwy_margin
         }
 
         ## betahat at the given variance parameter values
@@ -165,24 +162,31 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         r1<-r[ii]
         r2<-r[jj]
 
-        Nhat<-sum(pwt)*2 ##FIXME for pairs by subtraction
+        Nhat<-sum(pwt)*2 ## population number of correlated pairs N(N-1)/2*2
 
         ## -2 times Gaussian log profile pairwise likelihood
         qf<-crossprod(r1,pwt*inv11*r1)+
             crossprod(r2,pwt*inv22*r2)+
             crossprod(r1,pwt*inv12*r2)+
             crossprod(r2,pwt*inv12*r1)
+
+        logdet<-sum(log(det)*pwt)
         
         ## all pairs by subtraction
         if (subtract_margins){
-            qf_margin<-(Nhat-1)*crossprod(r,pw_uni*r/v_margin)
+            qf_margin<-crossprod(r,pw_uni*r/v_margin)
             qf_ind<-crossprod(r1,pwt*r1/v11)+crossprod(r2,pwt*r2/v22)
-            qf<-qf+qf_margin-qf_ind
-        }
-        
+            qf<-qf-qf_ind+(N-1)*qf_margin
+            
+            logdet_margin<-sum(log(v_margin)*pw_uni)
+            logdet_ind<-sum(log(v11*v22)*pwt)
+            logdet<- logdet-logdet_ind+(N-1)*logdet_margin
+
+            Nhat<-N*(N-1)  ## population number of pairs
+        } 
         s2<<-qf/Nhat
         
-        sum(log(det)*pwt) + Nhat*log(qf*2*pi/Nhat)
+        logdet + Nhat*log(qf*2*pi/Nhat)
         
     }
 
@@ -263,10 +267,11 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ## Powell's derivative-free quadratic optimiser
     fit<-minqa::bobyqa(theta0, devfun,
                 lower = m0@lower,
-                upper = rep(Inf, length(theta)), pwt=pwts)
+                upper = rep(Inf, length(theta)), pwt=pwts,
+                subtract_margins=all.pairs && subtract.margins)
 
     ## variance of betas, if wanted
-    Vbeta<-if (sterr) Vbeta(fit$par,pwts) else matrix(NA,q,q)
+    Vbeta<-if (sterr && !subtract.margins) Vbeta(fit$par,pwts) else matrix(NA,q,q)
 
     ## variance components
     Th<-matrix(0,q,q)
