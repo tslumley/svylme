@@ -149,8 +149,8 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
             xtwx_ind<- crossprod(Xii,pwt*Xii/v11) + crossprod(Xjj,pwt*Xjj/v22)
             xtwy_ind<-crossprod(Xii,pwt*y[ii]/v11) + crossprod(Xjj,pwt*y[jj]/v22)     
             N<-sum(pw_uni)  ## population number of observations
-            xtwx<-xtwx-xtwx_ind+(N-1)*xtwx_margin
-            xtwy<-xtwy-xtwy_ind+(N-1)*xtwy_margin
+            xtwx<-xtwx-xtwx_ind+2*(N-1)*xtwx_margin
+            xtwy<-xtwy-xtwy_ind+2*(N-1)*xtwy_margin
         }
 
         ## betahat at the given variance parameter values
