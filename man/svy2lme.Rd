@@ -18,7 +18,7 @@ method=c("general","nested"), all.pairs=FALSE, subtract.margins=FALSE)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{formula}{
-    Model formula as in the \code{lme4} package
+    Model formula as in the \code{lme4} package}
   \item{design}{
     A survey design object produced by \code{survey::svydesign}. The
     pairwise weights will be computed from this design, which must have

@@ -11,7 +11,7 @@ likelihood. Allows for correlated random effects, eg, for genetic
 relatedness (QTL) models
 }
 \usage{
-svy2relmer(formula, design, sterr=TRUE,  return.devfun=FALSE, relmat=NULL,
+svy2relmer(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NULL,
  all.pairs=FALSE, subtract.margins=FALSE )
 }
 %- maybe also 'usage' for other objects documented here.
@@ -20,7 +20,6 @@ svy2relmer(formula, design, sterr=TRUE,  return.devfun=FALSE, relmat=NULL,
     Model formula as in the \code{lme4} package, or with terms like
     \code{(1|id)} for correlated random effects together with the
     \code{relmat} argument.
-    
   }
   \item{design}{
     A survey design object produced by \code{survey::svydesign}. The
@@ -35,14 +34,12 @@ svy2relmer(formula, design, sterr=TRUE,  return.devfun=FALSE, relmat=NULL,
   \item{return.devfun}{If \code{TRUE}, return the deviance function as a
     component of the object. This will increase the memory use
     substantially, but allows for bootstrapping.}
-  \item{relmat){
-     Specifies a list of relatedness matrices that corresponds to one or
-more random-effect groupings (eg \code{(1|id)} in the \code{formula}
+  \item{relmat}{ Specifies a list of relatedness matrices that corresponds to one or
+    more random-effect groupings (eg \code{(1|id)} in the \code{formula}
     together with \code{relmat=list(id=Phi)} implies a covariance matrix
-    of \code{Phi} for the random effects before scaling. See Details and
-    the vignettes. 
-    }
-    \item{all.pairs}Use all pairs rather than just correlated pairs?}
+    of \code{Phi} for the random effects before scaling). See Details and
+    the vignettes.  }
+  \item{all.pairs}{Use all pairs rather than just correlated pairs?}
     \item{subtract.margins}{If \code{TRUE} and \code{all.pairs=TRUE},
     compute with all pairs by the faster algorithm involving subtraction
     from the marginal likelihood}
@@ -79,7 +76,7 @@ more random-effect groupings (eg \code{(1|id)} in the \code{formula}
   
 }
 \references{
-Ziyatdinov, A., Vázquez-Santiago, M., Brunel, H. et al. lme4qtl: linear mixed models with flexible covariance structure for genetic studies of related individuals. BMC Bioinformatics 19, 68 (2018). https://doi.org/10.1186/s12859-018-2057-x
+Ziyatdinov, A., Vázquez-Santiago, M., Brunel, H. et al. lme4qtl: linear mixed models with flexible covariance structure for genetic studies of related individuals. BMC Bioinformatics 19, 68 (2018). \url{https://doi.org/10.1186/s12859-018-2057-x}
 }
 \author{
   Thomas Lumley
