@@ -1,4 +1,5 @@
-svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NULL){
+svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
+                     relmat=NULL,all.pairs=FALSE, subtract.margins=FALSE){
 
     data<-model.frame(design)
 
@@ -68,8 +69,12 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
     Lambda<- lme4::getME(m0, "Lambda")
     Zt<-lme4::getME(m0,"Zt")
     
+
     ## profile pairwise deviance
-    devfun<-function(theta,pwt){
+    ##
+    ## having this be a copy of the one in svy2lmeNG looks bad
+    ## but it's to allow reference to big objects by lexical scope
+    devfun<-function(theta, pwt,  subtract_margins=FALSE){
         ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
         Lambda@x<- theta[Lind]
@@ -107,6 +112,20 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
             crossprod(Xii,pwt*inv12*y[jj])+
             crossprod(Xjj,pwt*inv12*y[ii])
 
+        ## all pairs by subtraction
+        ## nb: some observations may not be in *any* correlated pairs
+        if (subtract_margins){
+            v_margin <- D
+            pw_uni<-weights(design)
+            xtwx_margin<-crossprod(X,pw_uni*X/v_margin)
+            xtwy_margin<-crossprod(X,pw_uni*y/v_margin)
+            xtwx_ind<- crossprod(Xii,pwt*Xii/v11) + crossprod(Xjj,pwt*Xjj/v22)
+            xtwy_ind<-crossprod(Xii,pwt*y[ii]/v11) + crossprod(Xjj,pwt*y[jj]/v22)     
+            N<-sum(pw_uni)  ## population number of observations
+            xtwx<-xtwx-xtwx_ind+2*(N-1)*xtwx_margin
+            xtwy<-xtwy-xtwy_ind+2*(N-1)*xtwy_margin
+        }
+
         ## betahat at the given variance parameter values
         beta<<-solve(xtwx,xtwy)
         Xbeta<-X%*%beta
@@ -116,17 +135,31 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NU
         r1<-r[ii]
         r2<-r[jj]
 
+        Nhat<-sum(pwt)*2 ## population number of correlated pairs N(N-1)/2*2
+
         ## -2 times Gaussian log profile pairwise likelihood
         qf<-crossprod(r1,pwt*inv11*r1)+
             crossprod(r2,pwt*inv22*r2)+
             crossprod(r1,pwt*inv12*r2)+
             crossprod(r2,pwt*inv12*r1)
 
-        Nhat<-sum(pwt)*2
+        logdet<-sum(log(det)*pwt)
+        
+        ## all pairs by subtraction
+        if (subtract_margins){
+            qf_margin<-crossprod(r,pw_uni*r/v_margin)
+            qf_ind<-crossprod(r1,pwt*r1/v11)+crossprod(r2,pwt*r2/v22)
+            qf<-qf-qf_ind+(N-1)*qf_margin
+            
+            logdet_margin<-sum(log(v_margin)*pw_uni)
+            logdet_ind<-sum(log(v11*v22)*pwt)
+            logdet<- logdet-logdet_ind+(N-1)*logdet_margin
+
+            Nhat<-N*(N-1)  ## population number of pairs
+        } 
         s2<<-qf/Nhat
         
-        ##sum(log(det)*pwt) + qf 
-        sum(log(det)*pwt) + Nhat*log(qf*2*pi/Nhat)
+        logdet + Nhat*log(qf*2*pi/Nhat)
         
     }
 

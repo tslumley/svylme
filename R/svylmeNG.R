@@ -101,7 +101,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     Zt<-lme4::getME(m0,"Zt")
     
     ## profile pairwise deviance
-    devfun<-function(theta, pwt, pw_uni=NULL, subtract_margins=FALSE){
+    devfun<-function(theta, pwt, subtract_margins=FALSE){
         ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
         Lambda@x<- theta[Lind]

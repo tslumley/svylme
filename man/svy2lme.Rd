@@ -18,9 +18,7 @@ method=c("general","nested"), all.pairs=FALSE, subtract.margins=FALSE)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{formula}{
-    Model formula as in the \code{lme4} package, specifying a single
-    grouping variable (cluster) for the random effects
-  }
+    Model formula as in the \code{lme4} package
   \item{design}{
     A survey design object produced by \code{survey::svydesign}. The
     pairwise weights will be computed from this design, which must have
@@ -36,8 +34,9 @@ method=c("general","nested"), all.pairs=FALSE, subtract.margins=FALSE)
   \item{return.devfun}{If \code{TRUE}, return the deviance function as a
     component of the object. This will increase the memory use
     substantially, but allows for bootstrapping.}
-  \item{method}{\code{"nested"} requires the model clusters to be nested
-    in the design sampling units. It's faster and better tested}
+  \item{method}{\code{"nested"} requires the model clusters with a
+    single grouping variable that is the same as the primary sampling
+    unit. It's faster and better tested}
     \item{all.pairs}{Only with \code{method="general"}, use all pairs
       rather than just correlated pairs?}
     \item{subtract.margins}{If \code{TRUE} and \code{all.pairs=TRUE},
@@ -56,8 +55,12 @@ method=c("general","nested"), all.pairs=FALSE, subtract.margins=FALSE)
     reciprocals of pairwise sampling probabilities. The advantage over
     standard weighted pseudolikelihoods is that there is no
     large-cluster assumption needed and no rescaling of weights. The
-    disadvantage is some loss of efficiency (to an extent that isn't
-    well understood), and simpler point estimation.
+    disadvantage is some loss of efficiency and simpler point
+    estimation.
+
+    With \code{method="nested"} we have the method of Yi et al
+    (2016). Using \code{method="general"} relaxes the conditions on the
+    design and model. 
   
     The code uses \code{lme4::lmer} to parse the formula and produce
     starting values, profiles out the fixed effects and residual
