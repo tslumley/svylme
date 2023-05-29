@@ -36,14 +36,18 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
     ## need PSUs as well as clusters now
     psu<-design$cluster[[1]]
     
-
-    ## all pairs within same cluster
-    ## needs to be all correlated (in the model) pairs
-    Lambda<- lme4::getME(m0, "Lambda")
-    Zt<-lme4::getME(m0,"Zt")
-    Xi<-tcrossprod(crossprod(Zt, Lambda)) + Diagonal(n)
-    ij<-subset(expand.grid(i=1:n,j=1:n),i!=j)
-    ij<-ij[Xi[as.matrix(ij)]!=0,]
+   if (all.pairs && !subtract.margins){
+        ## unavoidably going to be big
+        ij<-subset(expand.grid(i=1:n,j=1:n),i!=j)
+    } else{
+        ## all pairs within same cluster
+        ## needs to be all correlated (in the model) pairs
+        Lambda<- lme4::getME(m0, "Lambda")
+        Zt<-lme4::getME(m0,"Zt")
+        Xi<-tcrossprod(crossprod(Zt, Lambda)) + Diagonal(n)
+        ij<-subset(expand.grid(i=1:n,j=1:n),i!=j)
+        ij<-ij[Xi[as.matrix(ij)]!=0,]
+    }
     
     ## columns of indices for first and second observation in a pair
     ii<-ij[,1]
@@ -241,10 +245,11 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
     ## Powell's derivative-free quadratic optimiser
     fit<-minqa::bobyqa(theta0, devfun,
                 lower = m0@lower,
-                upper = rep(Inf, length(theta)), pwt=pwts)
+                upper = rep(Inf, length(theta)), pwt=pwts,
+                subtract_margins=all.pairs && subtract.margins)
 
     ## variance of betas, if wanted
-    Vbeta<-if (sterr) Vbeta(fit$par,pwts) else matrix(NA,q,q)
+    Vbeta<-if (sterr && !subtract.margins) Vbeta(fit$par,pwts) else matrix(NA,q,q)
 
     ## variance components
     Th<-matrix(0,q,q)

@@ -66,5 +66,12 @@ svy2lme(sdMilk ~ lact + log(dim) + (1|herd), design=herd_des,method="general")
 lme4::lmer(sdMilk ~ lact + log(dim) + (1|herd), data=milk_subset)
 svy2relmer(sdMilk ~ lact + log(dim) + (1|id) + (1|herd), design=herd_des,
     relmat = list(id = A_gen))
+
+## compare to all pairs
+svy2lme(sdMilk ~ lact + log(dim) + (1|herd),
+design=herd_des,method="general", all.pairs=TRUE)
+svy2lme(sdMilk ~ lact + log(dim) + (1|herd),
+design=herd_des,method="general", all.pairs=TRUE, subtract.margins=TRUE)
+
 }
 \keyword{datasets}
