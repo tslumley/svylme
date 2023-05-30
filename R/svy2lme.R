@@ -469,7 +469,12 @@ print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     theta<-x$opt$par
     s<-sqrt(as.vector(x$s2))
     stdev<- matrix(s*sqrt(diag(x$L)),ncol=1)
-    rownames(stdev)<-x$znames
+    if (!is.null(names(x$zname))){
+        vcnames<-paste(names(x$znames), x$znames, sep=":")
+    } else {
+        vcnames<-x$znames
+    }
+    rownames(stdev)<-vcnames
     colnames(stdev)<-"Std.Dev."
     print(round(stdev,digits))
     cat("Residual:\t",round(s,digits))
