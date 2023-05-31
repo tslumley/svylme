@@ -231,6 +231,15 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
             crossprod(Xjj,pwt*inv22*Xjj)+
             crossprod(Xii,pwt*inv12*Xjj)+
             crossprod(Xjj,pwt*inv12*Xii)
+
+        if (subtract_margins){
+            v_margin <- D
+            pw_uni<-weights(design)
+            xtwx_margin<-crossprod(X,pw_uni*X/v_margin)
+            xtwx_ind<- crossprod(Xii,pwt*Xii/v11) + crossprod(Xjj,pwt*Xjj/v22)
+            N<-sum(pw_uni)  ## population number of observations
+            xtwx<-xtwx-xtwx_ind+2*(N-1)*xtwx_margin
+        }
         
         Xbeta<-X%*%beta
         r<-y-Xbeta
@@ -244,7 +253,9 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
             Xii*pwt*(inv12*r2)+
             Xjj*pwt*(inv12*r1)
 
-       
+        if (subtract_margins){
+           stop("not done")
+        }
         ## The grouping variables here are PSUs (not model clusters)
         
         if (is.null(design)){
