@@ -90,7 +90,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
 
     ## second-order weights
     allpwts<-svylme:::all_pi_from_design(design,ii,jj)
-    pwts<-1/allpwts$full
+    pwt<-1/allpwts$full
   
     ## variance matrix of random effects
     qi<-sapply(m0@cnms,length)
@@ -101,7 +101,8 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     Zt<-lme4::getME(m0,"Zt")
     
     ## profile pairwise deviance
-    devfun<-function(theta, pwt, subtract_margins=FALSE){
+    ## a whole heap of stuff is being passed by lexical scope
+    devfun<-function(theta, subtract_margins=FALSE){
         ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
         Lambda@x<- theta[Lind]
@@ -202,7 +203,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ##
     ## The nested version was simpler because pairs were always in the same PSU
     
-    Vbeta<-function(theta,pwt, subtract_margins=FALSE){
+    Vbeta<-function(theta, subtract_margins=FALSE){
         if (subtract_margins) stop("sandwich estimator for subtract_margins=TRUE not yet implemented")
         ## setup exactly as in devfun
         ## variance parameters: Cholesky square root of variance matrix
@@ -278,11 +279,11 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ## Powell's derivative-free quadratic optimiser
     fit<-minqa::bobyqa(theta0, devfun,
                 lower = m0@lower,
-                upper = rep(Inf, length(theta)), pwt=pwts,
+                upper = rep(Inf, length(theta)), 
                 subtract_margins=all.pairs && subtract.margins)
 
     ## variance of betas, if wanted
-    Vbeta<-if (sterr && !subtract.margins) Vbeta(fit$par,pwts) else matrix(NA,q,q)
+    Vbeta<-if (sterr && !subtract.margins) Vbeta(fit$par,subtract_margins=all.pairs && subtract.margins) else matrix(NA,q,q)
 
     ## variance components
     Th<-matrix(0,q,q)
