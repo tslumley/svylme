@@ -1,4 +1,5 @@
 ## FIXME: we're getting underestimation of variance components and non-zero score in models with relmat
+## Also (or because) the estimates change slightly if you reorder the data. 
 
 svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
                      relmat=NULL,all.pairs=FALSE, subtract.margins=FALSE){
