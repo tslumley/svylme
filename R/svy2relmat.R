@@ -142,7 +142,7 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
         r1<-r[ii]
         r2<-r[jj]
 
-        Nhat<-sum(pwt)*2 ## population number of correlated pairs N(N-1)/2*2
+        Nhat<-sum(pwt) ## population number of correlated pairs N(N-1)
 
         ## -2 times Gaussian log profile pairwise likelihood
         qf<-crossprod(r1,pwt*inv11*r1)+
@@ -164,9 +164,9 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
 
             Nhat<-N*(N-1)  ## population number of pairs
         } 
-        s2<<-qf/Nhat
+        s2<<-qf/(2*Nhat)
         
-        logdet + Nhat*log(qf*2*pi/Nhat)
+        logdet +2*Nhat*log(qf*2*pi/Nhat)
         
     }
 
@@ -283,71 +283,77 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
 ## From lme4qtl (github.com/variani/lme4qtl), GPL3
 relmatLmer_naive <- function(formula, data = NULL, 
   start = NULL,
-  relmat = list()
+  relmat =NULL
 )
 {
-  # formula
+  ## lme4 formula
   control <- lme4::lmerControl(check.nobs.vs.rankZ = "ignore", 
     check.nobs.vs.nlev = "ignore", check.nobs.vs.nRE = "ignore")
     mc <- mcout <- match.call()
 
-  # lmod
+  ## lme4 data setup
   lmod <- lme4::lFormula(formula, data, control = control)
-  
-  #-------------------------------
-  # start of relmatLmer-specific code
-  #-------------------------------
-  stopifnot(is.list(relmat), length(names(relmat)) == length(relmat))
-  relnms <- names(relmat)
-  relfac <- relmat
-  flist <- lmod$reTrms[["flist"]]   ## list of factors
 
-  ind <- (relnms %in% names(flist))
-  if(any(ind)) {   
-    asgn <- attr(flist, "assign")
-    for(i in seq_along(relnms[ind])) {
-      
-      relmati <- relnms[ind][i]
-      if(!(relmati %in% names(flist))) {
-        stop("a relationship matrix must be (", relmati, ")",
-          " associated with only one random effects term (", paste(names(flist), collapse = ", "), ")")
-      }
-      tn <- which(relmati == names(flist))
-      fn <- names(flist)[tn]
-      
-      zn <- lmod$fr[, fn]
-      zn<-as.factor(zn)
-      zn.unique <- levels(zn)
+    if (is.null(relmat)){
+        warning("No relmat terms found")
+        } else {
+            ##-------------------------------
+            ## start of relmatLmer-specific code
+            ##-------------------------------
+            if (!is.list(relmat)) stop("relmat must be a list")
+            if (length(names(relmat)) != length(relmat)) stop("relmat terms must have names")
 
-      stopifnot(!is.null(rownames(relmat[[fn]])))
-      rn <- rownames(relmat[[fn]])
-
-      stopifnot(all(zn.unique %in% rn))
-      
-      # compute a relative factor R: K = R'R
-      # See lme4qtl:::relfac
-      K <- Matrix::Matrix(relmat[[fn]][zn.unique, zn.unique], sparse = TRUE)
-      R <- Matrix::chol(K)
-      relfac[[fn]] <- R
-
-        pi <- length(lmod$reTrms$cnms[[i]])
-        Zi_t <- lmod$reTrms$Ztlist[[i]] 
-      Zi_t <- kronecker(R, diag(1, pi)) %*% Zi_t # t(Z*)
-
-      # put the new t(Z*) back into the appropriate slot `Ztlist`
-      lmod$reTrms$Ztlist[[i]] <- Zi_t
-
-    }
-  }
-  lmod$reTrms[["Zt"]] <- do.call(rbind, lmod$reTrms$Ztlist)
+            relnms <- names(relmat)
+            relfac <- relmat
+            flist <- lmod$reTrms[["flist"]]   ## list of factors
+            fnmns <- names(flist)
+            
+            ind <- (relnms %in% names(flist))
+            if (any(!ind)) warning("some relmat terms are not used")
+            
+            if(any(ind)) {   
+                asgn <- attr(flist, "assign")
+                if (any(duplicated(asgn))) stop("a relmat term can have only one random-effect term")
+                for(i in seq_along(fnmns)) {
+                    fn <- fnmns[i]
+                    if (!(fn %in% relnms)) next  ## not relmat
+                    
+                    ##tn <- which(relmati == names(flist))
+                    ##fn <- names(flist)[tn]
+                    
+                    zn <- lmod$fr[, fn]
+                    zn<-as.factor(zn)
+                    zn.unique <- levels(zn)
+                    
+                    if(is.null(rownames(relmat[[fn]]))) stop("relmat matrices must have dimnames")
+                    rn <- rownames(relmat[[fn]])
+                    
+                    if(!all(zn.unique %in% rn)) stop("relmat dimnames do not match factor levels")
+                    
+                    ## compute a relative factor R: K = R'R
+                    ## See lme4qtl:::relfac
+                    K <- Matrix::Matrix(relmat[[fn]][zn.unique, zn.unique], sparse = TRUE)
+                    R <- Matrix::chol(K)
+                    relfac[[fn]] <- R
+                    
+                    pi <- length(lmod$reTrms$cnms[[i]])
+                    Zi_t <- lmod$reTrms$Ztlist[[i]] 
+                    Zi_t <- kronecker(R, diag(1, pi)) %*% Zi_t ## t(Z*)
+                    
+                    ## put the new t(Z*) back into the appropriate slot `Ztlist`
+                    lmod$reTrms$Ztlist[[i]] <- Zi_t
+                    
+                }
+            }
+            lmod$reTrms[["Zt"]] <- do.call(rbind, lmod$reTrms$Ztlist)
+        }
+    mcout$formula <- lmod$formula
+    lmod$formula <- NULL
     
-  mcout$formula <- lmod$formula
-  lmod$formula <- NULL
-  
-    devfun <- do.call(mkLmerDevfun, c(lmod,list(start = start)))#, verbose = verbose, control = control)))
-  
+    devfun <- do.call(mkLmerDevfun, c(lmod,list(start = start)))
+    
     opt <-optimizeLmer(devfun,start=start)
-        
+    
     rval<-lme4::mkMerMod(environment(devfun), opt, lmod$reTrms, fr = lmod$fr)
     rval@optinfo$relfac<-list(relfac=relfac)
     rval

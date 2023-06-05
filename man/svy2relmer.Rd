@@ -62,6 +62,8 @@ svy2relmer(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NULL,
     \code{relmat} matrix. For example, in a quantitative trait locus
     model in genetics, the matrix would be a genetic relatedness matrix.
 
+    There can be only one random-effect term for each relmat term. If
+    you need more, make a copy of the relmat term with a different name
 
     The \code{return.devfun=TRUE} option is useful if you want to
     examine objects that aren't returned as part of the output. For
