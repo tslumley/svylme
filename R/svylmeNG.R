@@ -163,7 +163,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         r1<-r[ii]
         r2<-r[jj]
 
-        Nhat<-sum(pwt)*2 ## population number of correlated pairs N(N-1)/2*2
+        Nhat<-sum(pwt)*2 ## population number of *correlated* pairs 
 
         ## -2 times Gaussian log profile pairwise likelihood
         qf<-crossprod(r1,pwt*inv11*r1)+

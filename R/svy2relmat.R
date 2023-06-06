@@ -142,7 +142,7 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
         r1<-r[ii]
         r2<-r[jj]
 
-        Nhat<-sum(pwt) ## population number of correlated pairs N(N-1)
+        Nhat<-sum(pwt) ## population number of correlated pairs 
 
         ## -2 times Gaussian log profile pairwise likelihood
         qf<-crossprod(r1,pwt*inv11*r1)+
@@ -156,11 +156,11 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
         if (subtract_margins){
             qf_margin<-crossprod(r,pw_uni*r/v_margin)
             qf_ind<-crossprod(r1,pwt*r1/v11)+crossprod(r2,pwt*r2/v22)
-            qf<-qf-qf_ind+(N-1)*qf_margin
+            qf<-qf-qf_ind+2*(N-1)*qf_margin
             
             logdet_margin<-sum(log(v_margin)*pw_uni)
             logdet_ind<-sum(log(v11*v22)*pwt)
-            logdet<- logdet-logdet_ind+(N-1)*logdet_margin
+            logdet<- logdet-logdet_ind+2*(N-1)*logdet_margin
 
             Nhat<-N*(N-1)  ## population number of pairs
         } 
