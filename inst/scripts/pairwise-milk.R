@@ -32,9 +32,24 @@ system.time(
 m3<-svy2relmer(sdMilk~lact+log(dim)+(1|id)+(1|herd),design=milk_des, relmat=list(id=A_gen),all.pairs=TRUE, subtract.margins=TRUE)
 )
 
-set.seed(2023-6-1)
-sim_milk<-simulate(m0)
-milk$simMilk<-sim_milk$sim_1
+
+simMilk<-function(theta,model, n){
+	Lambda<- getME(model, "Lambda")
+    Zt<-getME(model,"Zt")
+    Lind<-getME(model, "Lind")
+    Lambda@x<- theta[Lind]
+    s2<-model@devcomp$cmp["sigmaML"]
+    m<-nrow(Zt)
+  	u<-matrix(rnorm(m*n,0,1),ncol=n)
+	U<-crossprod(Zt,Lambda)%*%u*sqrt(s2)
+	Y<-drop(getME(model,"X")%*%model@beta)+U+matrix(rnorm(nrow(U)*n,0,s=sqrt(s2)),ncol=n)
+	Y
+}
+
+
+set.seed(2023-6-7)
+sim_milk<-simMilk(m0@optinfo$val, m0,2)
+milk$simMilk<-sim_milk[,1]
 sim_milk_des<-svydesign(id=~1,data=milk)
 
 m1a<-relmatLmer(simMilk~lact+log(dim)+(1|id)+(1|herd),data=milk, relmat=list(id=A_gen),REML=FALSE)

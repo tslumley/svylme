@@ -296,7 +296,8 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
                Vbeta=Vbeta,
                formula=formula,
                znames=do.call(c,m0@cnms),
-               L=L)
+               L=L, all.pairs=all.pairs,
+               subtract.margins=subtract.margins)
     
     ## for resampling
     if(return.devfun) {

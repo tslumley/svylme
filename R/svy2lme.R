@@ -463,8 +463,13 @@ svy2lme_nested<-function(formula,design,sterr=TRUE, return.devfun=FALSE){
  
 print.svy2lme<-function(x,digits=max(3L, getOption("digits") - 3L),...){
     cat("Linear mixed model fitted by pairwise pseudolikelihood\n")
-    cat("Formula: ")
-    cat(paste(deparse(x$formula),collapse="\n"))
+    if(!is.null(x$call)){
+        cat("Call: ")
+        cat(paste(deparse(x$call),collapse="\n"))
+    }else{
+            cat("Formula: ")
+            cat(paste(deparse(x$formula),collapse="\n"))
+    }
     cat("\nRandom effects:\n")
     theta<-x$opt$par
     s<-sqrt(as.vector(x$s2))

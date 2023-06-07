@@ -258,14 +258,26 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
     Th<-matrix(0,q,q)
     Th[ThInd]<-fit$par
     L<-tcrossprod(Th)
+
+    ## names: get the relmat names into the output if possible
+    znames<-do.call(c,m0@cnms)
+    if (any(names(znames) %in% names(sys.call()$relmat))){
+        tn<-names(znames)[names(znames) %in% names(sys.call()$relmat)]
+        for(tni in tn){
+            names(znames)[names(znames) %in% tni]<-deparse(sys.call()$relmat[[tni]])
+        }
+    }
+    
     ## return all the things
     rval<-list(opt=fit,
                s2=s2,
                beta=beta,
                Vbeta=Vbeta,
                formula=formula,
-               znames=do.call(c,m0@cnms),
-               L=L)
+               znames=znames,
+               L=L,call=sys.call(),
+               all.pairs=all.pairs,
+               subtract.margins=subtract.margins)
     
     ## for resampling
     if(return.devfun) {
