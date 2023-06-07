@@ -1,6 +1,8 @@
 library(lme4)
 library(svylme)
 
+set.seed(2023-6-7)
+
 N1=400 
 N2=400 
 latitude<-1:N2
@@ -12,11 +14,11 @@ overlap=ceiling(N2*3/4)
 
 cflmer<-function(model){
     a<-VarCorr(model)
-    c(fixef(model), as.vector(unlist(a[1:2])), attr(a,"sc")^2)
+    c(fixef(model), as.vector(unlist(a[1:2])), attr(a,"sc")^2, SE(model))
     }
 cfsvy<-function(model){
     a<-coef(model, random=TRUE)
-    c(coef(model), diag(a$varb),a$s2)
+    c(coef(model), diag(a$varb),a$s2,SE(model))
     }
 
 
@@ -36,7 +38,7 @@ model_cluster<-function(population, overlap){
 population<-model_cluster(population,overlap)
 
 
-rr<-replicate(100, {
+rr<-replicate(1000, {
     population$x<- population$long %% 40
     population$z<-rnorm(400*400)
     population$u<-sort(rnorm(400))[population$cluster]
