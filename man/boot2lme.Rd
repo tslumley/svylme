@@ -6,7 +6,12 @@
 Resampling variances for svy2lme
 }
 \description{
-  Computes variance estimates for the weighted-pairwise-likelihood linear mixed models fitted by \code{\link{svy2lme}} using replicate weights.  The replicate weights for a pair are obtained by dividing by the sampling weight and then multiplying by the replicate weight. There will be a warning if the ratio of replicate weight to sampling weight differs for observations in the same pair. 
+  Computes variance estimates for the weighted-pairwise-likelihood
+  linear mixed models fitted by \code{\link{svy2lme}} using replicate
+  weights.  The replicate weights for a pair are obtained by dividing by
+  the sampling weight and then multiplying by the replicate
+  weight. There will be a warning if the ratio of replicate weight to
+  sampling weight differs for observations in the same pair.  
 }
 \usage{
 boot2lme(model, rdesign,  verbose = FALSE)
@@ -51,6 +56,45 @@ The variance is estimated from the replicates \code{thetastar} and original poin
 
 
 \examples{
+
+
+set.seed(2000-2-29)
+
+df<-data.frame(x=rnorm(1000*20),g=rep(1:1000,each=20), t=rep(1:20,1000), id=1:20000)
+df$u<-with(df, rnorm(1000)[g])
+
+df$y<-with(df, x+u+rnorm(1000,s=2))
+
+## oversample extreme `u` to bias random-intercept variance
+pg<-exp(abs(df$u/2)-2.2)[df$t==1]
+
+in1<-rbinom(1000,1,pg)==1
+in2<-rep(1:5, length(in1))
+
+sdf<-subset(df, (g \%in\% (1:1000)[in1]) & (t \%in\% in2))
+
+p1<-rep(pg[in1],each=5)
+N2<-rep(20,nrow(sdf))
+
+## Population values
+lme4::lmer(y~x+(1|g), data=df)
+
+## Naive estimator: higher intercept variance
+lme4::lmer(y~x+(1|g), data=sdf)
+
+##pairwise estimator
+sdf$w1<-1/p1
+sdf$w2<-20/5
+
+design<-survey::svydesign(id=~g+id, data=sdf, weights=~w1+w2)
+pair<-svy2lme(y~x+(1|g),design=design,method="nested", return.devfun=TRUE)
+pair
+jkdesign<-as.svrepdesign(design)
+bpair<-boot2lme(pair, jkdesign)
+
+SE(bpair, "beta")
+SE(bpair, "theta")
+
 \donttest{
 ##takes a few minutes
 data(pisa)
@@ -61,7 +105,7 @@ pisa$id_student<-1:nrow(pisa)
 dpisa<-survey::svydesign(id=~id_school+id_student, weight=~wnrschbw+w_condstuwt, data=pisa)
 
 m<-svy2lme(isei~(1+female|id_school)+female+high_school+college+one_for+both_for+test_lang,
-	design=dpisa, return.devfun=TRUE)
+	design=dpisa, return.devfun=TRUE,method="nested")
 
 bpisa<-as.svrepdesign(dpisa, type="bootstrap", replicates=100)
 
@@ -69,7 +113,12 @@ b<-boot2lme(m, bpisa, verbose=TRUE)
 str(b)
 
 vcov(b,"beta")
-vcov(b,"SD")
+vcov(b,"s2")
+
+## SE() inherits the parameter= argument
+SE(b,"beta")
+SE(b,"theta")
+SE(b,"SD")
 
 }
 }

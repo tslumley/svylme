@@ -166,8 +166,14 @@ sdf$w1<-1/p1
 sdf$w2<-20/5
 
 design<-survey::svydesign(id=~g+id, data=sdf, weights=~w1+w2)
-pair<-svy2lme(y~x+(1|g),design=design)
+pair<-svy2lme(y~x+(1|g),design=design,method="nested")
 pair
+
+pair_g<-svy2lme(y~x+(1|g),design=design,method="general")
+pair_g
+
+all.equal(coef(pair), coef(pair_g))
+all.equal(SE(pair), SE(pair_g))
 
 
 }
