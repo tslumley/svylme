@@ -20,7 +20,7 @@ boot2lme<-function(model, rdesign, verbose=FALSE){
 
      
     nrep<-ncol(replicates)
-    pwt0<-get("pwts",environment(model$devfun))
+    pwt0<-if (model$method=="nested") get("pwts",environment(model$devfun)) else get("pwt",environment(model$devfun))
     if (is.null(rscales)) rscales<-rep(1,nrep)
 
     ii<-get("ii", environment(model$devfun))
@@ -41,9 +41,15 @@ boot2lme<-function(model, rdesign, verbose=FALSE){
 
     for(i in 1:nrep){
         if (verbose) setTxtProgressBar(pb, i)
+        if (model$method=="nested"){
         thetastar[i,]<-bobyqa(theta0, model$devfun,
                               lower = model$lower,
                               upper = rep(Inf, length(theta0)), pwt=repwt[,i]*pwt0)$par
+        } else {
+            thetastar[i,]<-bobyqa(theta0, model$devfun,
+                              lower = model$lower,
+                              upper = rep(Inf, length(theta0)), pwt_new=repwt[,i]*pwt0, subtract_margins=model$subtract.margins)$par
+         }
         betastar[i,]<-get("beta",environment(model$devfun))
         s2star[i]<-get("s2",environment(model$devfun))
         Dstar[i,,]<-get("L",environment(model$devfun))

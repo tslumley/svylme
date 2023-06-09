@@ -76,18 +76,13 @@ sdf<-subset(df, (g \%in\% (1:1000)[in1]) & (t \%in\% in2))
 p1<-rep(pg[in1],each=5)
 N2<-rep(20,nrow(sdf))
 
-## Population values
-lme4::lmer(y~x+(1|g), data=df)
-
-## Naive estimator: higher intercept variance
-lme4::lmer(y~x+(1|g), data=sdf)
 
 ##pairwise estimator
 sdf$w1<-1/p1
 sdf$w2<-20/5
 
 design<-survey::svydesign(id=~g+id, data=sdf, weights=~w1+w2)
-pair<-svy2lme(y~x+(1|g),design=design,method="nested", return.devfun=TRUE)
+pair<-svy2lme(y~x+(1|g),design=design, return.devfun=TRUE)
 pair
 jkdesign<-as.svrepdesign(design)
 bpair<-boot2lme(pair, jkdesign)

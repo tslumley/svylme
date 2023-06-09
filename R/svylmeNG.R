@@ -102,7 +102,9 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     
     ## profile pairwise deviance
     ## a whole heap of stuff is being passed by lexical scope
-    devfun<-function(theta, subtract_margins=FALSE){
+    devfun<-function(theta, pwt_new=NULL, subtract_margins=FALSE){
+        if (!is.null(pwt_new)) pwt<-pwt_new  ##resampling
+        
         ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
         Lambda@x<- theta[Lind]
