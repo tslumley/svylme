@@ -9,7 +9,7 @@ latitude<-1:N2
 longitude<-1:N1
 population<-expand.grid(lat=latitude,long=longitude)
 population$PSU<-population$long
-overlap=ceiling(N2*3/4)
+overlap=ceiling(N2*1/2)
 
 
 cflmer<-function(model){
@@ -37,8 +37,6 @@ model_cluster<-function(population, overlap){
 
 population<-model_cluster(population,overlap)
 
-
-rr<-replicate(1000, {
     population$x<- population$long %% 40
     population$z<-rnorm(400*400)
     population$u<-sort(rnorm(400))[population$cluster]
@@ -46,6 +44,8 @@ rr<-replicate(1000, {
     
     population$strata<-(population$long-1) %/% 40
     population$uid<-1:nrow(population)
+
+rr<-replicate(100, {
     
     stratsize<- c(20,5,4,3,2,2,3,4,5,20)
     names(stratsize)<-unique(population$strata)
@@ -67,11 +67,11 @@ rr<-replicate(1000, {
     
     c(
         cfsvy(svy2lme(y~x+z+(1|cluster), design=des)),
-        cflmer(lmer(y~x+z+(1|cluster), population)),
+        ##cflmer(lmer(y~x+z+(1|cluster), population)),
         cflmer(lmer(y~x+z+(1|cluster), stage2))
     )
 })
 
 
-matrix(apply(rr, 1, median),byrow=TRUE,nrow=3)
-matrix(apply(rr, 1, mad),byrow=TRUE,nrow=3)
+matrix(apply(rr, 1, median),byrow=TRUE,nrow=2)
+matrix(apply(rr, 1, mad),byrow=TRUE,nrow=2)

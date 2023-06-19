@@ -249,31 +249,47 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         r1<-r[ii]
         r2<-r[jj]
 
-        ##  variability matrix ('cheese')
-        ## score for betas 
-        xwr<-Xii*pwt*(inv11*r1)+
-            Xjj*pwt*(inv22*r2)+
-            Xii*pwt*(inv12*r2)+
-            Xjj*pwt*(inv12*r1)
+        ## try making W explicitly
+        W<-Matrix(0, n,n)
+        W[cbind(ii,jj)]<-inv12*pwt
+        idx<-which((1:n) %in% ii)
+        W[cbind(idx,idx)]<-rowsum(inv11*pwt,jj,reorder=TRUE)
+        xtwx<-crossprod(X, W%*%X)
+        xwr<-X*(W%*%r)
+        Delta<-survey:::Dcheck_multi(design$cluster, design$strata, design$allprob)
+        xtwxinv<-solve(xtwx)
+        V<-xtwxinv%*%crossprod(xwr, Delta%*%xwr)%*%xtwxinv
+       return(V)
+        
+        ## ##  variability matrix ('cheese')
+        ## ## score for betas 
+        ## xwr<-Xii*pwt*(inv11*r1)+
+        ##     Xjj*pwt*(inv22*r2)+
+        ##     Xii*pwt*(inv12*r2)+
+        ##     Xjj*pwt*(inv12*r1)
 
-        if (subtract_margins){
-           stop("not done")
-        }
-        ## The grouping variables here are PSUs (not model clusters)
+        ## if (subtract_margins){
+        ##    stop("not done")
+        ## }
+        ## ## The grouping variables here are PSUs (not model clusters)
         
-        if (is.null(design)){
-          stop("standard errors need a design argument")
-        }
-        inffun<-rowsum( xwr%*%solve(xtwx), psu[ii], reorder=FALSE)
+        ## if (is.null(design)){
+        ##   stop("standard errors need a design argument")
+        ## }
+        ## inf<-rowsum( xwr%*%solve(xtwx), ii, reorder=FALSE)
+        ## ##inf<- xwr%*%solve(xtwx)
+        ## designi<-design[(1:n) %in% ii,]
+        ## Dcheck<-survey:::Dcheck_multi(designi$cluster, designi$strata, designi$allprob)
+        ## crossprod(inf, Dcheck %*% inf)
         
-        stratPSU<-design$strata[,1][ii[!duplicated(psu[ii])]] ##FIXME to allow single-PSU strata?
+        ## ## stratPSU<-design$strata[,1][ii[!duplicated(psu[ii])]] ##FIXME to allow single-PSU strata?
         
-        one<-rep(1,NROW(inffun))
-        ni<-ave(one,stratPSU,FUN=NROW)
-        centering<-apply(inffun,2,function(x) ave(x, stratPSU, FUN=mean))
-        centered<- inffun-centering
-        V <- crossprod(centered*sqrt(ni/ifelse(ni==1,1,(ni-1))))
-        V
+        ## ## one<-rep(1,NROW(inffun))
+        ## ## ni<-ave(one,stratPSU,FUN=NROW)
+        ## ## centering<-apply(inffun,2,function(x) ave(x, stratPSU, FUN=mean))
+        ## ## centered<- inffun-centering
+        ## ## V <- crossprod(centered*sqrt(ni/ifelse(ni==1,1,(ni-1))))
+        ## ## V
     }
     
     
@@ -285,7 +301,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
                 subtract_margins=all.pairs && subtract.margins)
 
     ## variance of betas, if wanted
-    Vbeta<-if (sterr && !subtract.margins) Vbeta(fit$par,subtract_margins=all.pairs && subtract.margins) else matrix(NA,q,q)
+    Vb<-if (sterr && !subtract.margins) Vbeta(fit$par,subtract_margins=all.pairs && subtract.margins) else matrix(NA,q,q)
 
     ## variance components
     Th<-matrix(0,q,q)
@@ -295,7 +311,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     rval<-list(opt=fit,
                s2=s2,
                beta=beta,
-               Vbeta=Vbeta,
+               Vbeta=Vb,
                formula=formula,
                znames=do.call(c,m0@cnms),
                L=L, all.pairs=all.pairs,
