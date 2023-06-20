@@ -46,6 +46,7 @@ f<-function(overlap,REPS=1000){
     population$strata<-(population$long-1) %/% 40
     population$uid<-1:nrow(population)
     
+    true<-cflmer(lmer(y~x+z+(1|cluster), population))
     
     rr<-replicate(REPS, {
         
@@ -76,10 +77,11 @@ f<-function(overlap,REPS=1000){
 
     list(
         overlap=overlap/N2,
+        true=true,
         median=matrix(apply(rr, 1, median),byrow=TRUE,nrow=2),
-        mad=matrix(apply(rr, 1, mad),byrow=TRUE,nrow=2)[,1:3]
+        mad=matrix(apply(rr, 1, mad),byrow=TRUE,nrow=2)
     )
 }
 
 
-results<- lapply(c(0.1,0.25,0.5,0.75,0.9,1), f)
+results<- lapply(c(0.1,0.25,0.5,0.75,0.9,1)*N2, f)
