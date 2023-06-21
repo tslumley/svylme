@@ -50,7 +50,7 @@ f<-function(overlap,REPS=1000){
     
     rr<-replicate(REPS, {
         
-        stratsize<- c(20,5,4,3,2,2,3,4,5,20)
+        stratsize<- rep(7, 10) ##c(20,5,4,3,2,2,3,4,5,20)
         names(stratsize)<-unique(population$strata)
         sstrat<-stratsample(population$strata[!duplicated(population$PSU)], stratsize)
         
@@ -58,7 +58,7 @@ f<-function(overlap,REPS=1000){
         stage1<- subset(population, PSU %in% stage1psu)
         
         
-        stratsize2<-rep(c(20,8,20),c(1,66,1))
+        stratsize2<-rep(10,70)
         names(stratsize2)<-unique(stage1$PSU)
         stage2<-stage1[stratsample(stage1$PSU, stratsize2),]
         
@@ -90,7 +90,7 @@ f<-function(overlap,REPS=1000){
 results_0.25<-replicate(100, f(N2*1/4))
 results_0.5<-replicate(100, f(N2*1/2))
 results_0.75<-replicate(100, f(N2*3/4))
-save(results_0.25, results_0.5, results_0.75, file="~/svy2lmesim-crossed1.rda")
+save(results_0.25, results_0.5, results_0.75, file="~/svy2lmesim-crossed1-ig.rda")
 
 
 ## summaries
