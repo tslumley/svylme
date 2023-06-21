@@ -84,4 +84,10 @@ f<-function(overlap,REPS=1000){
 }
 
 
-results<- lapply(c(0.1,0.25,0.5,0.75,0.9,1)*N2, f)
+##results<- lapply(c(0.1,0.25,0.5,0.75,0.9,1)*N2, f)
+
+
+results_0.25<-replicate(100, f(N2*1/4))
+results_0.5<-replicate(100, f(N2*1/2))
+results_0.75<-replicate(100, f(N2*3/4))
+save(results_0.25, results_0.5, results_0.75, file="~/svy2lmesim-crossed1.rda")

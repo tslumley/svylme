@@ -253,13 +253,13 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         W<-Matrix(0, n,n)
         W[cbind(ii,jj)]<-inv12*pwt
         idx<-which((1:n) %in% ii)
-        W[cbind(idx,idx)]<-rowsum(inv11*pwt,jj,reorder=TRUE)
+        W[cbind(idx,idx)]<-rowsum(inv11*pwt,ii,reorder=TRUE)
         xtwx<-crossprod(X, W%*%X)
         xwr<-X*(W%*%r)
         Delta<-survey:::Dcheck_multi(design$cluster, design$strata, design$allprob)
         xtwxinv<-solve(xtwx)
         V<-xtwxinv%*%crossprod(xwr, Delta%*%xwr)%*%xtwxinv
-       return(V)
+        return(V)
         
         ## ##  variability matrix ('cheese')
         ## ## score for betas 
