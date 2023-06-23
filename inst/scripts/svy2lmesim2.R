@@ -21,7 +21,7 @@ cfsvy<-function(model){
     c(coef(model), diag(a$varb),a$s2,SE(model))
     }
 
-
+cfglm<-function(model){c(coef(model),c(0,0), SE(model))}
 
 model_cluster<-function(population, overlap){
    population$cluster<-numeric(nrow(population))
@@ -71,15 +71,17 @@ f<-function(overlap,REPS=1000){
         c(
             cfsvy(svy2lme(y~x+z+(1|cluster), design=des)),
             ##cflmer(lmer(y~x+z+(1|cluster), population)),
-            cflmer(lmer(y~x+z+(1|cluster), stage2))
+            cflmer(lmer(y~x+z+(1|cluster), stage2)),
+            cfglm(svyglm(y~x+z+(1|cluster), design=des))
+
         )
     })
 
     list(
         overlap=overlap/N2,
         true=true,
-        median=matrix(apply(rr, 1, median),byrow=TRUE,nrow=2),
-        mad=matrix(apply(rr, 1, mad),byrow=TRUE,nrow=2)
+        median=matrix(apply(rr, 1, median),byrow=TRUE,nrow=3),
+        mad=matrix(apply(rr, 1, mad),byrow=TRUE,nrow=3)
     )
 }
 
