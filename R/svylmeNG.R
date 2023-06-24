@@ -206,7 +206,6 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     ## The nested version was simpler because pairs were always in the same PSU
     
     Vbeta<-function(theta, subtract_margins=FALSE){
-        if (subtract_margins) stop("sandwich estimator for subtract_margins=TRUE not yet implemented")
         ## setup exactly as in devfun
         ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
@@ -241,7 +240,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
             xtwx_margin<-crossprod(X,pw_uni*X/v_margin)
             xtwx_ind<- crossprod(Xii,pwt*Xii/v11) + crossprod(Xjj,pwt*Xjj/v22)
             N<-sum(pw_uni)  ## population number of observations
-            xtwx<-xtwx-xtwx_ind+2*(N-1)*xtwx_margin
+             xtwx<-xtwx-xtwx_ind+2*(N-1)*xtwx_margin
         }
         
         Xbeta<-X%*%beta
@@ -254,6 +253,11 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         W[cbind(ii,jj)]<-inv12*pwt
         idx<-which((1:n) %in% ii)
         W[cbind(idx,idx)]<-rowsum(inv11*pwt,ii,reorder=TRUE)
+        if (subtract_margins){
+            n_uncorr<-rep(n-1,n)
+            n_uncorr[idx]<-n_uncorr[idx]-rowsum(rep(1,length(jj)),ii,reorder=TRUE)
+            W[cbind(1:n,1:n)]<-W[cbind(1:n,1:n)]+pw_uni*(1/v_margin)*n_uncorr
+        }
         xtwx<-crossprod(X, W%*%X)
         xwr<-X*(W%*%r)
         Delta<-survey:::Dcheck_multi(design$cluster, design$strata, design$allprob)
@@ -301,7 +305,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
                 subtract_margins=all.pairs && subtract.margins)
 
     ## variance of betas, if wanted
-    Vb<-if (sterr && !subtract.margins) Vbeta(fit$par,subtract_margins=all.pairs && subtract.margins) else matrix(NA,q,q)
+    Vb<-if (sterr ) Vbeta(fit$par,subtract_margins=all.pairs && subtract.margins) else matrix(NA,q,q)
 
     ## variance components
     Th<-matrix(0,q,q)
