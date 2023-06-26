@@ -184,7 +184,6 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
     ## The nested version was simpler because pairs were always in the same PSU
     
     Vbeta<-function(theta, subtract_margins=FALSE){
-        if (subtract_margins) stop("sandwich estimator for subtract_margins=TRUE not yet implemented")
         ## setup exactly as in devfun
         ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
@@ -217,13 +216,24 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
         r<-y-Xbeta
         r1<-r[ii]
         r2<-r[jj]
-
+        ## all pairs by subtraction
+        ## nb: some observations may not be in *any* correlated pairs
+        if (subtract_margins){
+            v_margin <- D
+            pw_uni<-weights(design)
+            N<-sum(pw_uni)  ## population number of observations
+        }
         
         ## try making W explicitly
         W<-Matrix(0, n,n)
         W[cbind(ii,jj)]<-inv12*pwt
         idx<-which((1:n) %in% ii)
         W[cbind(idx,idx)]<-rowsum(inv11*pwt,ii,reorder=TRUE)
+        if (subtract_margins){
+            n_uncorr<-rep(n-1,n)
+            n_uncorr[idx]<-n_uncorr[idx]-rowsum(rep(1,length(jj)),ii,reorder=TRUE)
+            W[cbind(1:n,1:n)]<-W[cbind(1:n,1:n)]+pw_uni*(1/v_margin)*n_uncorr
+        }
         xtwx<-crossprod(X, W%*%X)
         xwr<-X*(W%*%r)
         Delta<-survey:::Dcheck_multi(design$cluster, design$strata, design$allprob)
@@ -265,7 +275,7 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
                 subtract_margins=all.pairs && subtract.margins)
 
     ## variance of betas, if wanted
-    Vbeta<-if (sterr && !subtract.margins) Vbeta(fit$par,subtract_margins=all.pairs && subtract.margins) else matrix(NA,q,q)
+    Vbeta<-if (sterr) Vbeta(fit$par,subtract_margins=all.pairs && subtract.margins) else matrix(NA,q,q)
 
     ## variance components
     Th<-matrix(0,q,q)
