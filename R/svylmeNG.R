@@ -296,7 +296,9 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         ## ## V
     }
     
-    
+    if (any(zero<-(theta0==m0@lower))){
+        theta0[zero]<-0.5  ## relative variance, so 0.5 should be safe, but should see what lmer does
+    }
     
     ## Powell's derivative-free quadratic optimiser
     fit<-minqa::bobyqa(theta0, devfun,
