@@ -7,7 +7,7 @@
 Linear mixed models by pairwise likelihood
 }
 \description{
-Fits linear mixed models by profile pairwise composite
+Fits linear mixed models to survey data by maximimising the profile pairwise composite
 likelihood. 
 }
 \usage{
@@ -34,9 +34,9 @@ method=c("general","nested"), all.pairs=FALSE, subtract.margins=FALSE)
   \item{return.devfun}{If \code{TRUE}, return the deviance function as a
     component of the object. This will increase the memory use
     substantially, but allows for bootstrapping.}
-  \item{method}{\code{"nested"} requires the model clusters with a
+  \item{method}{\code{"nested"} requires the model clusters to have a
     single grouping variable that is the same as the primary sampling
-    unit. It's faster and better tested}
+    unit. It's faster.}
     \item{all.pairs}{Only with \code{method="general"}, use all pairs
       rather than just correlated pairs?}
     \item{subtract.margins}{If \code{TRUE} and \code{all.pairs=TRUE},
