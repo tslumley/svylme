@@ -27,8 +27,12 @@ boot2lme<-function(model, rdesign, verbose=FALSE){
     jj<-get("jj", environment(model$devfun))  
     repwt<-(replicates/basewts)[ii,]
     repwtj<-(replicates/basewts)[jj,]
-    if (any(abs((repwt-repwtj)/(1+repwt+repwtj))>1e-5)) warning("replicate weights vary within cluster")
-
+    if ((model$method=="nested") && (any(abs((repwt-repwtj)/(1+repwt+repwtj))>1e-5)))
+        warning("replicate weights vary within cluster")
+    else {
+        repwt<-sqrt(repwt*repwtj)  
+    }
+    
     theta0<-model$opt$par
     thetastar<-matrix(nrow=nrep,ncol=length(theta0))
     betastar<-matrix(nrow=nrep,ncol=length(model$beta))
