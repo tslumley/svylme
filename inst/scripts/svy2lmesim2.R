@@ -14,14 +14,14 @@ overlap=ceiling(N2*1/2)
 
 cflmer<-function(model){
     a<-VarCorr(model)
-    c(fixef(model), as.vector(unlist(a[1:2])), attr(a,"sc")^2, SE(model))
+    c(fixef(model), as.vector(unlist(a[1:2])), attr(a,"sc")^2, SE(model), c(0,0))
     }
 cfsvy<-function(model){
     a<-coef(model, random=TRUE)
-    c(coef(model), diag(a$varb),a$s2,SE(model))
+    c(coef(model), diag(a$varb),a$s2,SE(model),c(0,0))
     }
 
-cfglm<-function(model){c(coef(model),c(0,0), SE(model))}
+cfglm<-function(model){c(coef(model),c(0,0), SE(model), c(0,0))}
 
 model_cluster<-function(population, overlap){
    population$cluster<-numeric(nrow(population))
@@ -66,22 +66,24 @@ f<-function(overlap,REPS=1000){
         stage2$fpc1<-400/10
         stage2$fpc2<-400
         des<-svydesign(id=~PSU+uid, fpc=~fpc1+fpc2, strata=~strata,data=stage2)
-        
+        pair<-svy2lme(y~x+z+(1|cluster), design=des,return.devfun=TRUE)
+        jkdes<-as.svrepdesign(des)
+        jkvar<-boot2lme(pair,jkdes)
         
         c(
-            cfsvy(svy2lme(y~x+z+(1|cluster), design=des)),
+            cfsvy(pair),
             ##cflmer(lmer(y~x+z+(1|cluster), population)),
             cflmer(lmer(y~x+z+(1|cluster), stage2)),
-            cfglm(svyglm(y~x+z+(1|cluster), design=des))
-
+            cfglm(svyglm(y~x+z+(1|cluster), design=des)),
+            rep(0,5),SE(jkvar,"beta"), SE(jkvar,"theta"), sqrt(vcov(jkvar,"s2"))
         )
     })
 
     list(
         overlap=overlap/N2,
         true=true,
-        median=matrix(apply(rr, 1, median),byrow=TRUE,nrow=3),
-        mad=matrix(apply(rr, 1, mad),byrow=TRUE,nrow=3)
+        median=matrix(apply(rr, 1, median),byrow=TRUE,nrow=4),
+        mad=matrix(apply(rr, 1, mad),byrow=TRUE,nrow=4)
     )
 }
 
