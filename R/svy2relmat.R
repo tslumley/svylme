@@ -206,11 +206,7 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
         Xii<-X[ii,,drop=FALSE]
         Xjj<-X[jj,,drop=FALSE]
 
-        ## sensitivity matrix ('bread')
-        xtwx<- crossprod(Xii,pwt*inv11*Xii)+
-            crossprod(Xjj,pwt*inv22*Xjj)+
-            crossprod(Xii,pwt*inv12*Xjj)+
-            crossprod(Xjj,pwt*inv12*Xii)
+
         
         Xbeta<-X%*%beta
         r<-y-Xbeta
@@ -240,30 +236,6 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
         xtwxinv<-solve(xtwx)
         V<-xtwxinv%*%crossprod(xwr, Delta%*%xwr)%*%xtwxinv
         return(V)
-
-        ## ##  variability matrix ('cheese')
-        ## ## score for betas 
-        ## xwr<-Xii*pwt*(inv11*r1)+
-        ##     Xjj*pwt*(inv22*r2)+
-        ##     Xii*pwt*(inv12*r2)+
-        ##     Xjj*pwt*(inv12*r1)
-
-       
-        ## ## The grouping variables here are PSUs (not model clusters)
-        
-        ## if (is.null(design)){
-        ##   stop("standard errors need a design argument")
-        ## }
-        ## inffun<-rowsum( xwr%*%solve(xtwx), psu[ii], reorder=FALSE)
-        
-        ## stratPSU<-design$strata[,1][ii[!duplicated(psu[ii])]] ##FIXME to allow single-PSU strata?
-        
-        ## one<-rep(1,NROW(inffun))
-        ## ni<-ave(one,stratPSU,FUN=NROW)
-        ## centering<-apply(inffun,2,function(x) ave(x, stratPSU, FUN=mean))
-        ## centered<- inffun-centering
-        ## V <- crossprod(centered*sqrt(ni/ifelse(ni==1,1,(ni-1))))
-        ## V
     
     }
     if (any(zero<-(theta0==m0@lower))){
