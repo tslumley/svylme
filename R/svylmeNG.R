@@ -305,7 +305,7 @@ all_pi_from_design<-function(design, ii,jj){
 
     if (design$pps && !is.null(design$dcheck)){
         ## We have pairwise probabilities already. Or, at least, covariances
-        Deltacheck<-design$dcheck[ii,jj]
+        Deltacheck<-design$dcheck[[1]]$dcheck[cbind(ii,jj)]
         indep<-design$prob[ii]*design$prob[jj]
         pi_ij<-(Deltacheck+1)*indep
 
@@ -313,7 +313,6 @@ all_pi_from_design<-function(design, ii,jj){
         n<-design$fpc$sampsize
         N<-design$fpc$popsize
 
-        ## But sandwich standard errors would require fourth-order probabilities
         return(list(full=pi_ij,
                     first=NULL,
                     cond=NULL))
