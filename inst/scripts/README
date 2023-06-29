@@ -1,6 +1,8 @@
 Examples
 
 pairwise-milk:  milk yields, from pedigreemm. Large gene/environment example with varying group sizes
+milk-sampling: subsampling from the milk data
 twins-pairwise: bmi of twins, from mets.  Large data set of mostly pairs.
 twins-sampling: subsampling from the twins data
+svy2lmesim2: simulated data where PSU partially overlaps with model cluster
 
