@@ -12,6 +12,8 @@ The implementation allows for correlated random effects such as you get in quant
 
 ## Disadvantages
 
+Linear models only
+
 Some loss of efficiency compared to just fitting a design-based linear model (if you don't care about the variance components)
 
 There isn't (yet) an analog of the BLUPs of random effects, eg for small-area estimation
