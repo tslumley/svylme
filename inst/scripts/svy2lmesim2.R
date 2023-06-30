@@ -1,6 +1,14 @@
 library(lme4)
 library(svylme)
 
+
+library(parallel)
+mcreplicate<-function(n, expr,...){
+    l<-mclapply(integer(n), eval.parent(substitute(function(...) expr)), mc.cores=6)
+    simplify2array(l, higher = TRUE)
+    }
+
+
 set.seed(2023-6-20)
 
 N1=400 
@@ -48,7 +56,7 @@ f<-function(overlap,REPS=1000){
     
     true<-cflmer(lmer(y~x+z+(1|cluster), population))
     
-    rr<-replicate(REPS, {
+    rr<-mcreplicate(REPS, {
         
         stratsize<- c(20,5,4,3,2,2,3,4,5,20)
         names(stratsize)<-unique(population$strata)
@@ -92,9 +100,8 @@ f<-function(overlap,REPS=1000){
 
 
 results_0.25<-replicate(100, f(N2*1/4))
-results_0.5<-replicate(100, f(N2*1/2))
 results_0.75<-replicate(100, f(N2*3/4))
-save(results_0.25, results_0.5, results_0.75, file="~/svy2lmesim-crossed1.rda")
+save(results_0.25,results_0.75, file="~/svy2lmesim-crossed1.rda")
 
 
 ## summaries
