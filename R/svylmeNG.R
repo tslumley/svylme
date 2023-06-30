@@ -111,6 +111,12 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         ## Full (sparse) vcov(Y)
         Xi<-tcrossprod(crossprod(Zt, Lambda)) + Diagonal(n)
         D<-diag(Xi)
+
+        ## assign to enclosing env for resampling
+        Th<-matrix(0,q,q)
+        Th[ThInd]<-theta
+        L<<-tcrossprod(Th)
+
         
         ## v11 is a vector of (1,1) entries of the matrix var(Y)
         ## for each pair, similarly for the others
@@ -297,7 +303,6 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
 
 
 ## pairwise probabilities: does *not* assume nesting
-## probably does assume no more than two-stage sampling FIXME
 ##
 ## we only use $full, not the other components.
 ##

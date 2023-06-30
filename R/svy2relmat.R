@@ -94,7 +94,13 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
         v11<-D[ii]
         v22<-D[jj]
         v12<-Xi[cbind(ii,jj)]
-        
+
+
+        ## assign to enclosing environment for resampling
+        Th<-matrix(0,q,q)
+        Th[ThInd]<-theta
+        L<-tcrossprod(Th)
+
 
         ## explicit 2x2 determinants
         det<-v11*v22-v12*v12
