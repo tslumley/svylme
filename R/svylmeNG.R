@@ -259,7 +259,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         }
         xtwx<-crossprod(X, W%*%X)
         xwr<-X*(W%*%r)
-        Delta<-survey:::Dcheck_multi(design$cluster, design$strata, design$allprob)
+        Delta<-survey:::Dcheck_multi(design$cluster, design$strata, design$allprob)  ##FIXME need to handle other designs too
         xtwxinv<-solve(xtwx)
         V<-xtwxinv%*%crossprod(xwr, Delta%*%xwr)%*%xtwxinv
         return(V)
