@@ -67,7 +67,8 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     
     if (all.pairs && !subtract.margins){
         ## unavoidably going to be big
-        ij<-subset(expand.grid(i=1:n,j=1:n),i!=j)
+        ij<-expand.grid(i=1:n,j=1:n)
+        ij<-ij[ij$i!=ij$j,]  ## this would be clearer using subset(), but CRAN
     } else{
         ## all pairs within same cluster
         ## Conceptually, the union of 
@@ -89,7 +90,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     beta<-beta0<-lme4::fixef(m0)
 
     ## second-order weights
-    allpwts<-svylme:::all_pi_from_design(design,ii,jj)
+    allpwts<-all_pi_from_design(design,ii,jj)
     pwt<-1/allpwts$full
   
     ## variance matrix of random effects

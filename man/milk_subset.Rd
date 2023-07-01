@@ -1,5 +1,6 @@
 \name{milk_subset}
 \alias{milk_subset}
+\alias{A_gen}
 \docType{data}
 \title{
   Milk production (subset)

@@ -6,6 +6,7 @@ import(lme4)
 importFrom(utils,setTxtProgressBar)
 importFrom(utils,txtProgressBar)
 importFrom("stats", "ave", "model.frame", "pnorm", "weights")
+importFrom("stats", "printCoefmat")
 export(svy2lme,svy2relmer)
 export(boot2lme)
 

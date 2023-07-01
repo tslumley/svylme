@@ -1,6 +1,3 @@
-## FIXME: we're getting underestimation of variance components and non-zero score in models with relmat
-## Also (or because) the estimates change slightly if you reorder the data. 
-
 svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
                      relmat=NULL,all.pairs=FALSE, subtract.margins=FALSE){
 
@@ -41,14 +38,16 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
     
    if (all.pairs && !subtract.margins){
         ## unavoidably going to be big
-        ij<-subset(expand.grid(i=1:n,j=1:n),i!=j)
+       ij<-expand.grid(i=1:n,j=1:n)
+       ij<-ij[ij$i!=ij$j,]  ## this would be clearer using subset(), but CRAN
     } else{
         ## all pairs within same cluster
         ## needs to be all correlated (in the model) pairs
         Lambda<- lme4::getME(m0, "Lambda")
         Zt<-lme4::getME(m0,"Zt")
         Xi<-tcrossprod(crossprod(Zt, Lambda)) + Diagonal(n)
-        ij<-subset(expand.grid(i=1:n,j=1:n),i!=j)
+        ij<-expand.grid(i=1:n,j=1:n)
+        ij<-ij[ij$i!=ij$j,]  ## this would be clearer using subset(), but CRAN
         ij<-ij[Xi[as.matrix(ij)]!=0,]
     }
     
@@ -65,7 +64,7 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
     beta<-beta0<-lme4::fixef(m0)
 
     ## second-order weights
-    allpwts<-svylme:::all_pi_from_design(design,ii,jj)
+    allpwts<-all_pi_from_design(design,ii,jj)
     pwt<-1/allpwts$full
     
     ## variance matrix of random effects
