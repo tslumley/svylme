@@ -75,15 +75,30 @@ print.boot2lme<-function(x,...){
 vcov.boot2lme<-function(object, parameter=c("beta","theta","s2","relSD","SD","relVar","fullVar"),...){
     parameter<-match.arg(parameter)
 
-    V<-switch(parameter,
-           beta=svrVar(object$beta, object$scale,object$rscales),
-           theta=svrVar(object$theta, object$scale,object$rscales),
-           s2=svrVar(object$s2, object$scale, object$rscales),
-           relSD=svrVar(sqrt(t(apply(object$D,1, diag))), object$scale, object$rscales), ##FIXME: dimension decay when there's just one random effect
-           SD=svrVar(sqrt(t(apply(object$D,1, diag))*object$s2), object$scale, object$rscales),
-           relVar=svrVar(t(apply(object$D,1,c)), object$scale, object$rscales),
-           fullVar=svrVar(t(apply(object$D,1,c))*object$s2, object$scale, object$rscales)
-           )
+    nthetas<-NCOL(object$theta)
+
+    if (nthetas==1){
+           V<-switch(parameter,
+                      beta=svrVar(object$beta, object$scale,object$rscales),
+                      theta=svrVar(object$theta, object$scale,object$rscales),
+                      s2=svrVar(object$s2, object$scale, object$rscales),
+                      relSD=svrVar(sqrt((apply(object$D,1, diag))), object$scale, object$rscales), ##FIXME: dimension decay when there's just one random effect
+                      SD=svrVar(sqrt((apply(object$D,1, diag))*object$s2), object$scale, object$rscales),
+                      relVar=svrVar((apply(object$D,1,c)), object$scale, object$rscales),
+                      fullVar=svrVar((apply(object$D,1,c))*object$s2, object$scale, object$rscales)
+                      )
+
+        } else {
+            V<-switch(parameter,
+                      beta=svrVar(object$beta, object$scale,object$rscales),
+                      theta=svrVar(object$theta, object$scale,object$rscales),
+                      s2=svrVar(object$s2, object$scale, object$rscales),
+                      relSD=svrVar(sqrt(t(apply(object$D,1, diag))), object$scale, object$rscales), ##FIXME: dimension decay when there's just one random effect
+                      SD=svrVar(sqrt(t(apply(object$D,1, diag))*object$s2), object$scale, object$rscales),
+                      relVar=svrVar(t(apply(object$D,1,c)), object$scale, object$rscales),
+                      fullVar=svrVar(t(apply(object$D,1,c))*object$s2, object$scale, object$rscales)
+                      )
+    }
 
     as.matrix(V)
 
