@@ -428,5 +428,5 @@ coef.svy2lme<-function(object,...,random=FALSE){
 }
 
 vcov.svy2lme<-function(object,...){
-    object$Vbeta
+    as.matrix(object$Vbeta)
 }

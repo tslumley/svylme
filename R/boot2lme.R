@@ -75,7 +75,7 @@ print.boot2lme<-function(x,...){
 vcov.boot2lme<-function(object, parameter=c("beta","theta","s2","relSD","SD","relVar","fullVar"),...){
     parameter<-match.arg(parameter)
 
-    switch(parameter,
+    V<-switch(parameter,
            beta=svrVar(object$beta, object$scale,object$rscales),
            theta=svrVar(object$theta, object$scale,object$rscales),
            s2=svrVar(object$s2, object$scale, object$rscales),
@@ -84,5 +84,7 @@ vcov.boot2lme<-function(object, parameter=c("beta","theta","s2","relSD","SD","re
            relVar=svrVar(t(apply(object$D,1,c)), object$scale, object$rscales),
            fullVar=svrVar(t(apply(object$D,1,c))*object$s2, object$scale, object$rscales)
            )
+
+    as.matrix(V)
 
     }
