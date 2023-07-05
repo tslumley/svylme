@@ -30,7 +30,7 @@ boot2lme<-function(model, rdesign, verbose=FALSE){
     if ((model$method=="nested") && (any(abs((repwt-repwtj)/(1+repwt+repwtj))>1e-5)))
         warning("replicate weights vary within cluster")
     else {
-        repwt<-sqrt(repwt*repwtj)  
+        repwt<-repwt*repwtj
     }
     
     theta0<-model$opt$par
