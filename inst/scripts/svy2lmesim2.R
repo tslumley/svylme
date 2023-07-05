@@ -83,7 +83,7 @@ f<-function(overlap,REPS=1000){
             ##cflmer(lmer(y~x+z+(1|cluster), population)),
             cflmer(lmer(y~x+z+(1|cluster), stage2)),
             cfglm(svyglm(y~x+z+(1|cluster), design=des)),
-            rep(0,5),SE(jkvar,"beta"), SE(jkvar,"theta"), sqrt(vcov(jkvar,"s2"))
+            rep(0,5),SE(jkvar,"beta"), SE(jkvar,"fullVar"), sqrt(vcov(jkvar,"s2"))
         )
     })
 
