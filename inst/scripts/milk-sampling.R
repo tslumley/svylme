@@ -39,29 +39,54 @@ milk$simMilk<-sim_milk[,1]
 
 herds<-aggregate(milk$herd,list(milk$herd),length)
 herds$p<-herds[,2]*10/sum(herds[,2])
+
+cfsvy<-function(model)  c(coef(model), unlist(coef(model,random=TRUE))[c(2,5,1)])
+
+cflmer<-function(model){
+    a<-VarCorr(model)
+    c(fixef(model), as.vector(unlist(a[1:2])), attr(a,"sc")^2)
+    }
+
 Pi2<-UPtillepi2(herds$p)
 dimnames(Pi2)<-list(herds[,1], herds[,1])
 
-sampled_herds<-as.logical(UPtille(herds$p))
 
 
-submilk<-subset(milk, herd %in% herds[sampled_herds,1])
-submilk$herd<-as.character(submilk$herd)
+one.sim<-function(){
+    sampled_herds<-as.logical(UPtille(herds$p))
+    submilk<-subset(milk, herd %in% herds[sampled_herds,1])
+    submilk$herd<-as.character(submilk$herd)
+    
+    p<-herds$p[sampled_herds]
+    names(p)<-herds[sampled_herds,1]
+    submilk$p<-p[submilk$herd]
+    
+    
+    PI2_sub<-Pi2[sampled_herds,sampled_herds][submilk$herd,submilk$herd]
+    
+    
+    
+    sub_milk_des<-svydesign(id=~herd,data=submilk, prob=~p,pps=ppsmat(PI2_sub))
+    
+    
+    m1a<-relmatLmer(sdMilk~lact+log(dim)+(1|id)+(1|herd),data=submilk, relmat=list(id=A_gen),REML=FALSE)
+    m2a<-svy2relmer(sdMilk~lact+log(dim)+(1|id)+(1|herd),design=sub_milk_des, relmat=list(id=A_gen),return.devfun=TRUE)
+    m3a<-svy2relmer(sdMilk~lact+log(dim)+(1|id)+(1|herd),design=sub_milk_des, relmat=list(id=A_gen),all.pairs=TRUE, subtract.margins=TRUE)
+    
+    
 
-p<-herds$p[sampled_herds]
-names(p)<-herds[sampled_herds,1]
-submilk$p<-p[submilk$herd]
+    m1b<-relmatLmer(simMilk~lact+log(dim)+(1|id)+(1|herd),data=submilk, relmat=list(id=A_gen),REML=FALSE)
+    m2b<-svy2relmer(simMilk~lact+log(dim)+(1|id)+(1|herd),design=sub_milk_des, relmat=list(id=A_gen),return.devfun=TRUE)
+    m3b<-svy2relmer(simMilk~lact+log(dim)+(1|id)+(1|herd),design=sub_milk_des, relmat=list(id=A_gen),all.pairs=TRUE, subtract.margins=TRUE)
+    
+    rval<-c( cflmer(m1a),
+            cfsvy(m2a),
+            cfsvy(m3a),
+            cflmer(m1b),
+            cfsvy(m2b),
+            cfsvy(m3b)
+            )
+}
 
-
-##FIXme: no, we need either this at herd level or something different at individual level
-PI2_sub<-Pi2[sampled_herds,sampled_herds][submilk$herd,submilk$herd]
-
-
-
-sub_milk_des<-svydesign(id=~herd,data=submilk, prob=~p,pps=ppsmat(PI2_sub))
-
-
-m1a<-relmatLmer(simMilk~lact+log(dim)+(1|id)+(1|herd),data=submilk, relmat=list(id=A_gen),REML=FALSE)
-m2a<-svy2relmer(simMilk~lact+log(dim)+(1|id)+(1|herd),design=sub_milk_des, relmat=list(id=A_gen),return.devfun=TRUE)
-m3a<-svy2relmer(simMilk~lact+log(dim)+(1|id)+(1|herd),design=sub_milk_des, relmat=list(id=A_gen),all.pairs=TRUE, subtract.margins=TRUE)
-
+results<-replicate(1000, tryCatch(one.sim(), error=function(e) rep(NA,36)))
+save(results,file="~/milk-sampling.rda")

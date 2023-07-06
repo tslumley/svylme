@@ -3,8 +3,9 @@ library(svylme)
 
 
 library(parallel)
+RNGkind("L'Ecuyer-CMRG")
 mcreplicate<-function(n, expr,...){
-    l<-mclapply(integer(n), eval.parent(substitute(function(...) expr)), mc.cores=6)
+    l<-mclapply(integer(n), eval.parent(substitute(function(...) expr)), mc.cores=6,mc.set.seed = TRUE, mc.preschedule=TRUE)
     simplify2array(l, higher = TRUE)
     }
 
