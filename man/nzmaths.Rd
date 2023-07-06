@@ -41,10 +41,15 @@ OECD (2013) PISA 2012 Assessment and Analytical Framework: Mathematics, Reading,
 }
 \examples{
 data(nzmaths)
+
+oo<-options(survey.lonely.psu="average") ## only one PSU in one of the strata
+
 des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
 	weights=~W_FSCHWT+condwt, data=nzmaths)
 
 m1<-svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
+
+options(oo)
 
 }
 \keyword{datasets}
