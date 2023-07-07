@@ -90,3 +90,16 @@ one.sim<-function(){
 
 results<-replicate(1000, tryCatch(one.sim(), error=function(e) rep(NA,36)))
 save(results,file="~/milk-sampling.rda")
+
+
+milk_des<-svydesign(id=~1 ,data=milk)
+
+true1a<-m0
+true1b<-svy2relmer(sdMilk~lact+log(dim)+(1|id)+(1|herd),design=milk_des, relmat=list(id=A_gen))
+trub1c<-svy2relmer(sdMilk~lact+log(dim)+(1|id)+(1|herd),design=milk_des, relmat=list(id=A_gen),all.pairs=TRUE, subtract.margins=TRUE)
+
+
+true2a<-pedigreemm(simMilk~lact+log(dim)+(1|id)+(1|herd),data=milk, pedigree=list(id=pedCowsR), REML=FALSE)
+true2b<-svy2relmer(simMilk~lact+log(dim)+(1|id)+(1|herd),design=milk_des, relmat=list(id=A_gen))
+trub2c<-svy2relmer(simMilk~lact+log(dim)+(1|id)+(1|herd),design=milk_des, relmat=list(id=A_gen),all.pairs=TRUE, subtract.margins=TRUE)
+  
