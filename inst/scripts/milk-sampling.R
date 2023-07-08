@@ -37,7 +37,7 @@ set.seed(2023-6-29)
 sim_milk<-simMilk(m0@optinfo$val, m0,2)
 milk$simMilk<-sim_milk[,1]
 
-herds<-aggregate(milk$milk,list(milk$herd),length)
+herds<-aggregate(milk$milk,list(milk$herd),mean)
 herds$p<-herds[,2]*10/sum(herds[,2])
 
 cfsvy<-function(model)  c(coef(model), unlist(coef(model,random=TRUE))[c(2,5,1)])
