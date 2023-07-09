@@ -237,9 +237,9 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
         }
         xtwx<-crossprod(X, W%*%X)
         xwr<-X*(W%*%r)
-        ##Delta<-survey:::Dcheck_multi(design$cluster, design$strata, design$allprob)  ##FIXME need to handle other designs too
         xtwxinv<-solve(xtwx)
         V<-xtwxinv%*%vcov(svytotal(as.matrix(xwr)%//%weights(design), design))%*%xtwxinv
+        dimnames(V)<-list(colnames(X),colnames(X))
         return(V)
     
     }
