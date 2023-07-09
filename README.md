@@ -3,6 +3,11 @@ Mixed models for complex surveys
 
 This package fits linear mixed models to data from complex surveys, by maximising a weighted pairwise likelihood
 
+```
+library(remotes)
+remotes::install_github("tslumley/svylme")
+```
+
 ## Advantages
 
 It works (gives consistent estimates of the regression coefficients and variance components) for **any** linear mixed model and **any** design, without any restrictions on the sampling units
