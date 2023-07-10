@@ -5,7 +5,7 @@
 Data from the PISA international school survey
 }
 \description{
-Data from the PISA survey of schools, obtained from Stata, who obtained it from Rabe-Hesketh \& Skrondal. 
+Data from the PISA survey of schools, obtained from Stata, who obtained it from Rabe-Hesketh & Skrondal. 
 }
 \usage{data("pisa")}
 \format{
