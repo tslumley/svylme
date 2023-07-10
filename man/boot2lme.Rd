@@ -57,38 +57,18 @@ The variance is estimated from the replicates \code{thetastar} and original poin
 
 \examples{
 
+data(api, package="survey")
 
-set.seed(2000-2-29)
+# two-stage cluster sample
+dclus2<-svydesign(id=~dnum+snum, fpc=~fpc1+fpc2, data=apiclus2)
 
-df<-data.frame(x=rnorm(1000*20),g=rep(1:1000,each=20), t=rep(1:20,1000), id=1:20000)
-df$u<-with(df, rnorm(1000)[g])
+m0<-svy2lme(api00~(1|dnum)+ell+mobility+api99, design=dclus2,return.devfun=TRUE)
+jkdes<-as.svrepdesign(dclus2, type="mrb")
+jkvar<-boot2lme(m0,jkdes)
 
-df$y<-with(df, x+u+rnorm(1000,s=2))
-
-## oversample extreme `u` to bias random-intercept variance
-pg<-exp(abs(df$u/2)-2.2)[df$t==1]
-
-in1<-rbinom(1000,1,pg)==1
-in2<-rep(1:5, length(in1))
-
-sdf<-subset(df, (g \%in\% (1:1000)[in1]) & (t \%in\% in2))
-
-p1<-rep(pg[in1],each=5)
-N2<-rep(20,nrow(sdf))
-
-
-##pairwise estimator
-sdf$w1<-1/p1
-sdf$w2<-20/5
-
-design<-survey::svydesign(id=~g+id, data=sdf, weights=~w1+w2)
-pair<-svy2lme(y~x+(1|g),design=design, return.devfun=TRUE)
-pair
-jkdesign<-as.svrepdesign(design)
-bpair<-boot2lme(pair, jkdesign)
-
-SE(bpair, "beta")
-SE(bpair, "theta")
+SE(jkvar, "beta")
+SE(jkvar, "SD")
+SE(jkvar,"s2")
 
 \donttest{
 ##takes a few minutes

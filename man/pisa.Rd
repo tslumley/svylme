@@ -43,8 +43,6 @@ pisa$id_student<-1:nrow(pisa)
 dpisa<-survey::svydesign(id=~id_school+id_student, weight=~wnrschbw+w_condstuwt, data=pisa)
 
 
-svy2lme(isei~(1+female|id_school)+female+high_school+college+one_for+both_for+test_lang,
-	design=dpisa)
 svy2lme(isei~(1|id_school)+female+high_school+college+one_for+both_for+test_lang,
 	design=dpisa)
 
