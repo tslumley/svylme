@@ -85,7 +85,7 @@ svy2relmer(formula, design, sterr=TRUE, return.devfun=FALSE, relmat=NULL,
   
 }
 \references{
-Ziyatdinov, A., Vázquez-Santiago, M., Brunel, H. et al. lme4qtl: linear mixed models with flexible covariance structure for genetic studies of related individuals. BMC Bioinformatics 19, 68 (2018). \url{https://doi.org/10.1186/s12859-018-2057-x}
+Ziyatdinov, A., Vázquez-Santiago, M., Brunel, H. et al. lme4qtl: linear mixed models with flexible covariance structure for genetic studies of related individuals. BMC Bioinformatics 19, 68 (2018). \url{https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2057-x}
 }
 \author{
   Thomas Lumley
