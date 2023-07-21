@@ -80,8 +80,15 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
     ##
     ## having this be a copy of the one in svy2lmeNG looks bad
     ## but it's to allow reference to big objects by lexical scope
-    devfun<-function(theta,  subtract_margins=FALSE){
-        ## variance parameters: Cholesky square root of variance matrix
+    devfun<-function(theta,  pwt_new=NULL, pw_uni_new=NULL, subtract_margins=FALSE){
+       if (!is.null(pwt_new)) pwt<-pwt_new  ##resampling
+       if (!is.null(pw_uni_new)){
+            pw_uni<-pw_uni_new  ##resampling
+       } else {
+            pw_uni<-weights(design)
+       }
+       
+       ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
         Lambda@x<- theta[Lind]
         ## Full (sparse) vcov(Y)
@@ -128,7 +135,6 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
         ## nb: some observations may not be in *any* correlated pairs
         if (subtract_margins){
             v_margin <- D
-            pw_uni<-weights(design)
             xtwx_margin<-crossprod(X,pw_uni*X/v_margin)
             xtwy_margin<-crossprod(X,pw_uni*y/v_margin)
             xtwx_ind<- crossprod(Xii,pwt*Xii/v11) + crossprod(Xjj,pwt*Xjj/v22)
@@ -279,7 +285,8 @@ svy2relmer<-function(formula, design, sterr=TRUE, return.devfun=FALSE,
                znames=znames,
                L=L,call=sys.call(),
                all.pairs=all.pairs,
-               subtract.margins=subtract.margins)
+               subtract.margins=subtract.margins,
+               method="general")
     
     ## for resampling
     if(return.devfun) {
