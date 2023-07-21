@@ -103,8 +103,13 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
     
     ## profile pairwise deviance
     ## a whole heap of stuff is being passed by lexical scope
-    devfun<-function(theta, pwt_new=NULL, subtract_margins=FALSE){
+    devfun<-function(theta, pwt_new=NULL, pw_uni_new=NULL, subtract_margins=FALSE){
         if (!is.null(pwt_new)) pwt<-pwt_new  ##resampling
+        if (!is.null(pw_uni_new)){
+            pw_uni<-pw_uni_new  ##resampling
+        } else {
+            pw_uni<-weights(design)
+        }
         
         ## variance parameters: Cholesky square root of variance matrix
         Lind<-lme4::getME(m0, "Lind")
@@ -153,7 +158,6 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
         ## nb: some observations may not be in *any* correlated pairs
         if (subtract_margins){
             v_margin <- D
-            pw_uni<-weights(design)
             xtwx_margin<-crossprod(X,pw_uni*X/v_margin)
             xtwy_margin<-crossprod(X,pw_uni*y/v_margin)
             xtwx_ind<- crossprod(Xii,pwt*Xii/v11) + crossprod(Xjj,pwt*Xjj/v22)

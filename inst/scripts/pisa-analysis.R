@@ -12,7 +12,7 @@ des<-update(des, centPCGIRLS=PCGIRLS-0.5)
 jkdes<-as.svrepdesign(des)
 
 m1<-svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(centPCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des, return.devfun=TRUE)
-m2<-svy2lme(PV1MATH~ (1+ ST04Q01+MATHEFF+OPENPS |SCHOOLID)+ST04Q01*centPCGIRLS+MATHEFF+OPENPS, design=des, return.devfun=TRUE)
+m2<-svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(centPCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des, return.devfun=TRUE,all.pairs=TRUE, subtract.margins=TRUE)
 
 m1var<-boot2lme(m1,jkdes,verbose=TRUE)
 m2var<-boot2lme(m2,jkdes,verbose=TRUE)

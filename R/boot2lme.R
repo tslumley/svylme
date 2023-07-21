@@ -49,10 +49,13 @@ boot2lme<-function(model, rdesign, verbose=FALSE){
         thetastar[i,]<-bobyqa(theta0, model$devfun,
                               lower = model$lower,
                               upper = rep(Inf, length(theta0)), pwt=repwt[,i]*pwt0)$par
-        } else {
+        } else { ## need to pass in univariate weights as well, for all.pairs. 
             thetastar[i,]<-bobyqa(theta0, model$devfun,
                               lower = model$lower,
-                              upper = rep(Inf, length(theta0)), pwt_new=repwt[,i]*pwt0, subtract_margins=model$subtract.margins)$par
+                              upper = rep(Inf, length(theta0)),
+                              pwt_new=repwt[,i]*pwt0,
+                              pw_uni_new=weights(rdesign,"analysis")[,i],
+                              subtract_margins=model$subtract.margins)$par
          }
         betastar[i,]<-get("beta",environment(model$devfun))
         s2star[i]<-get("s2",environment(model$devfun))

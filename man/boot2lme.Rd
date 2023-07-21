@@ -62,13 +62,22 @@ data(api, package="survey")
 # two-stage cluster sample
 dclus2<-svydesign(id=~dnum+snum, fpc=~fpc1+fpc2, data=apiclus2)
 
-m0<-svy2lme(api00~(1|dnum)+ell+mobility+api99, design=dclus2,return.devfun=TRUE)
+m0<-svy2lme(api00~(1|dnum)+ell+mobility, design=dclus2,return.devfun=TRUE)
 jkdes<-as.svrepdesign(dclus2, type="mrb")
 jkvar<-boot2lme(m0,jkdes)
 
 SE(jkvar, "beta")
 SE(jkvar, "SD")
 SE(jkvar,"s2")
+
+
+m1<-svy2lme(api00~(1|dnum)+ell+mobility,
+design=dclus2,return.devfun=TRUE, all.pairs=TRUE, subtract.margins=TRUE)
+jk1var<-boot2lme(m1,jkdes)
+
+SE(jk1var, "beta")
+SE(jk1var, "SD")
+
 
 \donttest{
 ##takes a few minutes
