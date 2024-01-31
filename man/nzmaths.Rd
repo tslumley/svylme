@@ -47,7 +47,9 @@ oo<-options(survey.lonely.psu="average") ## only one PSU in one of the strata
 des<-svydesign(id=~SCHOOLID+STIDSTD, strata=~STRATUM, nest=TRUE,
 	weights=~W_FSCHWT+condwt, data=nzmaths)
 
-m1<-svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
+## This example works, but it takes more than five seconds to run, so it
+## has been commented out
+## m1<-svy2lme(PV1MATH~ (1+ ST04Q01 |SCHOOLID)+ST04Q01*(PCGIRLS+SMRATIO)+MATHEFF+OPENPS, design=des)
 
 options(oo)
 

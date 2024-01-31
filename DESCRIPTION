@@ -1,6 +1,6 @@
 Package: svylme
 Title: Linear Mixed Models for Complex Survey Data
-Version: 1.4
+Version: 1.5
 Author: Thomas Lumley
 Description: Linear mixed models for complex survey data, by pairwise composite likelihood, as described in <arXiv:2311.13048>. Supports nested and crossed random effects, and correlated random effects as in genetic models.  Allows for multistage sampling and for other designs where pairwise sampling probabilities are specified or can be calculated. 
 Imports: minqa, Matrix, lme4, methods, utils, stats
