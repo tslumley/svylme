@@ -23,4 +23,4 @@ Some loss of efficiency compared to just fitting a design-based linear model (if
 There isn't (yet) an analog of the BLUPs of random effects, eg for small-area estimation
 
 If your sampling units and model clusters are the same, and your design isn't too strongly informative, you can likely get more precise estimates of the variance components with
-sequential pseudolikelihood as implemented in Stata or Mplus. 
+stagewise pseudolikelihood as implemented in Stata or Mplus. 
