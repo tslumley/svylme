@@ -262,7 +262,7 @@ svy2lme<-function(formula, design, sterr=TRUE, return.devfun=FALSE, method=c("ge
             W[cbind(1:n,1:n)]<-W[cbind(1:n,1:n)]+pw_uni*(1/v_margin)*n_uncorr
         }
         xtwx<-crossprod(X, W%*%X)
-        xwr<-X*(W%*%r)
+        xwr<-X*drop(W%*%r)
         xtwxinv<-solve(xtwx)
         V<-xtwxinv%*%vcov(svytotal(as.matrix(xwr)%//%weights(design), design))%*%xtwxinv
         dimnames(V)<-list(colnames(X),colnames(X))
